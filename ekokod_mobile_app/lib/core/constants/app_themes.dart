@@ -8,6 +8,25 @@ class AppColors {
   static const Color lightGreen = Color(0xFF396334); // %66 Stop
   static const Color veryLightGreen = Color(0xFF7D967A); // %100 Stop
 
+  // login Giriş Kartı Arkaplan Rengi (Örnek açık gri)
+  static const Color cardBackground = Color(
+    0xFFEBEBEB,
+  ); // Taslak ekrandaki açık gri
+
   // ... Diğer renkler (beyaz, gri vb.)
-  static const Color white = Colors.white; 
+  static const Color white = Colors.white;
 }
+
+// Login Full Arkaplan Gradyanı Tanımı
+const LinearGradient loginBackgroundGradient = LinearGradient(
+  begin: Alignment.topCenter,
+  end: Alignment.bottomCenter,
+  stops: [0.0, 0.19, 0.36, 0.66, 1.0], // Gönderdiğiniz oranlar
+  colors: [
+    AppColors.darkGreen,
+    AppColors.mediumDarkGreen,
+    AppColors.mediumGreen,
+    AppColors.lightGreen,
+    AppColors.veryLightGreen,
+  ],
+);
