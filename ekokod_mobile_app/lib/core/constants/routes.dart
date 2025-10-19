@@ -1,6 +1,11 @@
-class Routes {
-  static const String startRoute = '/';
-  static const String loginRoute = '/login';
-  static const String homeRoute = '/home';
-  // ... diğer rotalar
+class RoutePaths {
+  static const String start = '/';
+  static const String login = '/login';
+  static const String home = '/home';
+}
+
+class RouteNames {
+  static const String start = 'start';
+  static const String login = 'login';
+  static const String home = 'home';
 }

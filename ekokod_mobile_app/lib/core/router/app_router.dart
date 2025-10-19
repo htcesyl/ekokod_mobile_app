@@ -6,35 +6,27 @@ import '../../presentation/start/start_page.dart'; // StartPage'in yolu
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    // Uygulama başladığında gösterilecek ilk rota
-    initialLocation: Routes.startRoute,
-
+    initialLocation: RoutePaths.start,
     routes: [
-      // START SAYFASI (Splash/Yükleme Ekranı)
       GoRoute(
-        path: Routes.startRoute,
-        name: Routes.startRoute,
+        path: RoutePaths.start,
+        name: RouteNames.start,
         builder: (context, state) => const StartPage(),
       ),
-
-      // GİRİŞ SAYFASI
       GoRoute(
-        path: Routes.loginRoute,
-        name: Routes.loginRoute,
+        path: RoutePaths.login,
+        name: RouteNames.login,
         builder: (context, state) => const LoginPage(),
       ),
-
-      // ANA SAYFA
       GoRoute(
-        path: Routes.homeRoute,
-        name: Routes.homeRoute,
+        path: RoutePaths.home,
+        name: RouteNames.home,
         builder:
-            (context, state) => const Placeholder(
-              child: Center(child: Text("Home Page (Ana Sayfa)")),
+            (context, state) => const Scaffold(
+              body: Center(child: Text("Home Page (Ana Sayfa)")),
             ),
       ),
     ],
-
     errorBuilder:
         (context, state) => Scaffold(
           body: Center(

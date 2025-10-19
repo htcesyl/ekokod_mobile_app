@@ -1,53 +1,62 @@
 import 'package:flutter/material.dart';
-
-// Renk ve Gradyanları import edin
 import '../../../core/constants/app_themes.dart';
-// Rotaları import edin (Kullanılacaksa)
-import '../../../core/router/app_router.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/constants/routes.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Sayfanın iskeleti ve arkaplan gradyanı
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          // appBackgroundGradient, app_themes.dart'ta tanımladığımız gradyan
-          gradient: loginBackgroundGradient,
-        ),
-        // Klavye açıldığında taşmayı önler
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              // Uygulama başlığının üstündeki boşluk
-              SizedBox(height: MediaQuery.of(context).size.height * 0.15),
-
-              // 1. "EKOKOD" Başlığı
-              const Text(
-                'EKOKOD',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: AppColors.white,
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 50),
-
-              // 2. Giriş Kartı (Ana Widget)
-              const _LoginCard(),
-
-              // Giriş kartının altındaki boşluk
-              SizedBox(height: MediaQuery.of(context).size.height * 0.1),
-            ],
+      // Klavye açılınca ekran yüksekliği küçülsün (AndroidManifest'te adjustResize de var)
+      resizeToAvoidBottomInset: true,
+      body: Stack(
+        children: [
+          // --- Arka plan: klavyeden bağımsız, tam ekran ---
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(gradient: loginBackgroundGradient),
+            ),
           ),
-        ),
+
+          // --- İçerik: sadece yatay padding, klavye için extra bottom padding YOK ---
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // adjustResize ile constraints.maxHeight klavye açılınca küçülür
+                return SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: const [
+                        SizedBox(height: 80),
+                        Text(
+                          'EKOKOD',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 50),
+                        _LoginCard(),
+                        SizedBox(height: 40),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -126,7 +135,7 @@ class _LoginCardState extends State<_LoginCard> {
             child: TextButton(
               onPressed: () {
                 // TODO: Şifremi Unuttum İşlemi (Pop-up veya yeni sayfa)
-                print('Şifremi Unuttum Tıklandı');
+                debugPrint('Şifremi Unuttum Tıklandı');
               },
               child: const Text(
                 'Şifremi Unuttum',
@@ -146,8 +155,9 @@ class _LoginCardState extends State<_LoginCard> {
               // TODO: Giriş Yap Cubit/Command Tetikleme İşlemi buraya gelecek
               final email = _emailController.text;
               final password = _passwordController.text;
-              print('Giriş Denemesi: $email / $password');
+              debugPrint('Giriş Denemesi: $email / $password');
               // Navigator.of(context).pushReplacementNamed(Routes.homeRoute); // Başarılıysa yönlendirme
+              context.goNamed(RouteNames.home); //geçici yönlendirme
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.lightGreen, // Yeşil buton rengi

@@ -29,7 +29,7 @@ class _StartPageState extends State<StartPage> {
     // 4. GoRouter ile yönlendir:
     if (mounted) {
       // Widget'ın hala ekranda olup olmadığını kontrol edin
-      context.goNamed(Routes.loginRoute);
+      context.goNamed(RouteNames.login);
     }
   }
 
