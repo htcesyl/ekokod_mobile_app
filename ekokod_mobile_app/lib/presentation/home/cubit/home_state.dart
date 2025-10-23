@@ -1,0 +1,1 @@
+// Home sayfasının durumlarını(loading, error, success) için kullanılacak.

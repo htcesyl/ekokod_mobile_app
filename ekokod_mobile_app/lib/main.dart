@@ -1,4 +1,5 @@
 // lib/main.dart
+import 'package:ekokod_mobile_app/presentation/home/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:ekokod_mobile_app/presentation/start/start_page.dart';
 
@@ -16,7 +17,9 @@ class MyApp extends StatelessWidget {
       // Temayı buradan besleyebiliriz.
       // home: StartPage(), // GoRouter kullanacağımız için bu satır yerine router'ı tanımlayacağız.
       // Şimdilik test etmek için home'u kullanabiliriz:
-      home: StartPage(), 
+      // DEBUG yazısını kaldıran ayar BURASIDIR:
+      debugShowCheckedModeBanner: false,
+      home: HomePage(), 
     );
   }
 }
