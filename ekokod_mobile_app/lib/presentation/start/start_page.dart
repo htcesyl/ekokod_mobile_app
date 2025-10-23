@@ -1,8 +1,7 @@
-// lib/start/start_page.dart
-
 import 'package:flutter/material.dart';
-import 'package:ekokod_mobile_app/core/constants/app_themes.dart'; 
-// İleride Login sayfasına yönlendirme için GoRouter kullanılacak.
+import 'package:ekokod_mobile_app/core/constants/app_themes.dart';
+import 'package:ekokod_mobile_app/core/constants/routes.dart'; // Rota adlarını kullanmak için
+import 'package:go_router/go_router.dart';
 
 class StartPage extends StatefulWidget {
   const StartPage({super.key});
@@ -22,16 +21,16 @@ class _StartPageState extends State<StartPage> {
   // Asenkron başlatma fonksiyonu
   void _initializeApp() async {
     // 1. Gerekli bağımlılıkları (GetIt) başlat. (Sınıfın yüklenmesini bekler)
-    // await initDependencies(); 
+    // await initDependencies();
 
     // 2. Minimum bekleme süresi (Görselin görünmesi için)
-    await Future.delayed(const Duration(seconds: 2)); 
-
-    // 3. Kullanıcının oturumu var mı kontrol et (Auth logic)
+    await Future.delayed(const Duration(seconds: 2));
 
     // 4. GoRouter ile yönlendir:
-    // Navigator.of(context).pushReplacementNamed(AppRoutes.login); 
-    // veya Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+    if (mounted) {
+      // Widget'ın hala ekranda olup olmadığını kontrol edin
+      context.goNamed(RouteNames.login);
+    }
   }
 
   @override
