@@ -1,7 +1,3 @@
-
-// lib/main.dart
-import 'package:ekokod_mobile_app/presentation/home/pages/home_page.dart';
-
 import 'package:flutter/material.dart';
 import 'core/router/app_router.dart';
 
@@ -14,10 +10,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
+      routerConfig: AppRouter.router,
       debugShowCheckedModeBanner: false,
+
       title: 'EKOKOD',
-      home: HomePage(), 
     );
   }
 }

@@ -16,7 +16,7 @@ class LoginPage extends StatelessWidget {
           // --- Arka plan: klavyeden bağımsız, tam ekran ---
           const Positioned.fill(
             child: DecoratedBox(
-              decoration: BoxDecoration(gradient: loginBackgroundGradient),
+              decoration: BoxDecoration(gradient: appBackgroundGradient),
             ),
           ),
 
@@ -202,7 +202,7 @@ class _LoginCardState extends State<_LoginCard> {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15.0),
-          borderSide: BorderSide.none, // Kenarlık olmasın
+          borderSide: BorderSide.none,
         ),
       ),
     );

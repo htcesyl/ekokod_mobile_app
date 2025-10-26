@@ -1,3 +1,4 @@
+import 'package:ekokod_mobile_app/presentation/home/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../constants/routes.dart';
@@ -21,10 +22,7 @@ class AppRouter {
       GoRoute(
         path: RoutePaths.home,
         name: RouteNames.home,
-        builder:
-            (context, state) => const Scaffold(
-              body: Center(child: Text("Home Page (Ana Sayfa)")),
-            ),
+        builder: (context, state) => const HomePage(),
       ),
     ],
     errorBuilder:
