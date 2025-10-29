@@ -27,12 +27,12 @@ class PeriodSelector extends StatelessWidget {
         onTap: () => onPeriodSelected(period),
         child: Container(
           alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 4),
           decoration: BoxDecoration(
             // Aktif butonda activePeriodBackGround (D9D9D9), pasifte Beyaz (AppColors.white)
             color:
                 isSelected ? AppColors.activePeriodBackGround : AppColors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(30),
           ),
           child: Text(
             label,

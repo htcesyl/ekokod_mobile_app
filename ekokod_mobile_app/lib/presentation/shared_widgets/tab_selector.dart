@@ -3,9 +3,8 @@ import '../../domain/shared/enums.dart';
 import '../../core/constants/app_themes.dart';
 
 class TabSelector extends StatelessWidget {
-  // Aktif olan sekme
   final AnalyticsTab selectedTab;
-  // Sekme tıklandığında dışarıya (sayfaya) bildirim yapmak için callback
+
   final ValueChanged<AnalyticsTab> onTabSelected;
 
   const TabSelector({
@@ -22,7 +21,6 @@ class TabSelector extends StatelessWidget {
   }) {
     final bool isActive = selectedTab == tab;
 
-    // Aktif tab için istediğiniz yarı saydam (opacity 0.5) DEFA60 rengi
     final Color backgroundColor =
         isActive
             ? AppColors.activeTabBackground
@@ -36,8 +34,8 @@ class TabSelector extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             color: backgroundColor,
-            borderRadius: BorderRadius.circular(10),
-            // Aktif tab için hafif bir kenarlık ekleyebiliriz (isteğe bağlı)
+            borderRadius: BorderRadius.circular(20),
+
             border: Border.all(
               color:
                   isActive ? AppColors.activeTabBackground : Colors.transparent,
@@ -47,7 +45,7 @@ class TabSelector extends StatelessWidget {
           child: Text(
             title,
             style: TextStyle(
-              color: AppColors.black, // Yazı rengi siyah
+              color: AppColors.black,
               fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
               fontSize: 14,
             ),

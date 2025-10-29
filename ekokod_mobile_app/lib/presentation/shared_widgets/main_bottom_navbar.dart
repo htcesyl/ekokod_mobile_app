@@ -37,9 +37,9 @@ class MainBottomNavBar extends StatelessWidget {
     return BottomNavigationBar(
       // Arka plan rengi beyaz
       backgroundColor: Colors.white,
-      // Seçili olmayan ikonların rengi (Görseldeki gri tonlar)
+      // Seçili olmayan ikonların rengi
       unselectedItemColor: Colors.grey[600],
-      // Seçili ikonun rengi (Görseldeki yeşil ton)
+      // Seçili ikonun rengi
       selectedItemColor: const Color(0xFF1B441A),
       // Etiketlerin her zaman görünmesini sağlar
       showUnselectedLabels: true,

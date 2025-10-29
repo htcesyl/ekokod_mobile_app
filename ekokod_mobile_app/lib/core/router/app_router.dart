@@ -2,8 +2,9 @@ import 'package:ekokod_mobile_app/presentation/home/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../constants/routes.dart';
-import '../../presentation/auth/pages/login_page.dart'; // LoginPage'in yolu
-import '../../presentation/start/start_page.dart'; // StartPage'in yolu
+import '../../presentation/auth/pages/login_page.dart';
+import '../../presentation/start/start_page.dart';
+import '../../presentation/analytics/pages/analytics_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -23,6 +24,11 @@ class AppRouter {
         path: RoutePaths.home,
         name: RouteNames.home,
         builder: (context, state) => const HomePage(),
+      ),
+      GoRoute(
+        path: RoutePaths.analytics,
+        name: RouteNames.analytics,
+        builder: (context, state) => const AnalyticsPage(),
       ),
     ],
     errorBuilder:
