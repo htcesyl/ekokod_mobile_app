@@ -6,7 +6,6 @@ import '../../shared_widgets/data_summary_card.dart';
 import '../../../core/constants/app_themes.dart';
 
 class CarbonFootprintTabContent extends StatelessWidget {
-  // AnalizPage'den (üst Cubit katmanından) gelen filtreler
   final PeriodType selectedPeriod;
   final String selectedBuilding;
   final List<String> availableBuildings;
@@ -20,61 +19,33 @@ class CarbonFootprintTabContent extends StatelessWidget {
     required this.onBuildingChanged,
   });
 
-  // Başlık ve Filtreyi Grafiğin Üzerine Konumlandıran Yardımcı Widget
-  Widget _buildHeaderRow({
-    required String title,
-    required Widget filterWidget,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 5.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Sol Başlık
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: AppColors.black,
-            ),
-          ),
-          // Sağ Filtre (Dropdown)
-          filterWidget,
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    // 2'li grid düzeninde kart genişliği hesaplaması
     final cardWidth = (screenWidth / 2) - 26;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ------------------------------------
-        // 1. KARBON AYAK İZİ METRİK KARTLARI (Filtre veya Başlık Yok)
+        // 1. KARBON AYAK İZİ METRİK KARTLARI
         // ------------------------------------
+        // Metrik kartlarının kendi başlıkları olduğu için ayrı bir Row başlığa gerek yok.
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Wrap(
-            spacing: 10.0, // Yatay boşluk
-            runSpacing: 10.0, // Dikey boşluk
+            spacing: 10.0,
+            runSpacing: 10.0,
             children: [
-              // Metrik Kartları
               SizedBox(
                 width: cardWidth,
-                height: 120, // Sabit yükseklik, görsel tutarlılık için
+                height: 120,
                 child: const DataSummaryCard(
                   title: 'Yıllık Elektrik Tüketimi',
                   value: '124.000 kWh/yıl',
                   isCurrency: false,
                 ),
               ),
-
               SizedBox(
                 width: cardWidth,
                 height: 120,
@@ -84,7 +55,6 @@ class CarbonFootprintTabContent extends StatelessWidget {
                   isCurrency: false,
                 ),
               ),
-              // ... diğer iki kart da buraya eklenebilir ...
               SizedBox(
                 width: cardWidth,
                 height: 120,
@@ -113,14 +83,29 @@ class CarbonFootprintTabContent extends StatelessWidget {
         // 2. KARBON AYAK İZİ GRAFİĞİ
         // ------------------------------------
 
-        // BAŞLIK VE FİLTRE (KARTIN DIŞINDA)
-        _buildHeaderRow(
-          title: 'CO2 Salınım Analizi - Bu ${selectedPeriod.name}',
-          filterWidget: CustomDropdown(
-            label: '',
-            selectedItem: selectedBuilding,
-            items: availableBuildings,
-            onChanged: onBuildingChanged,
+        // BAŞLIK VE FİLTRE
+        Padding(
+          padding: const EdgeInsets.only(bottom: 5.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Sol Başlık
+              Text(
+                'CO2 Salınım Analizi - Bu ${selectedPeriod.name}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: AppColors.black,
+                ),
+              ),
+              // Sağ Filtre (Bina Seçimi)
+              CustomDropdown(
+                label: '',
+                selectedItem: selectedBuilding,
+                items: availableBuildings,
+                onChanged: onBuildingChanged,
+              ),
+            ],
           ),
         ),
 

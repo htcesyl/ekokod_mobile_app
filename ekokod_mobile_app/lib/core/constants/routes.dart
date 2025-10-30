@@ -4,8 +4,10 @@ class RoutePaths {
   static const String home = '/home';
   static const String analytics = '/analytics';
   static const String bills = '/bills';
-  static const String alarm = '/alarm';
+  static const String alarms = '/alarms';
   static const String menu = '/menu';
+  static const String profile = '/menu/profile';
+  static const String prediction = '/menu/prediction';
 }
 
 class RouteNames {
@@ -14,6 +16,8 @@ class RouteNames {
   static const String home = 'home';
   static const String analytics = 'analytics';
   static const String bills = 'bills';
-  static const String alarm = 'alarm';
+  static const String alarms = 'alarms';
   static const String menu = 'menu';
+  static const String profile = 'profile';
+  static const String prediction = 'prediction';
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/routes.dart';
+import '../../core/constants/routes.dart';
 
 class MainBottomNavBar extends StatelessWidget {
   // Seçili olan sayfanın indeksini dışarıdan alır.
@@ -27,7 +27,7 @@ class MainBottomNavBar extends StatelessWidget {
     _NavItem(
       icon: Icons.notifications_none,
       label: 'Alarm',
-      routeName: RouteNames.alarm,
+      routeName: RouteNames.alarms,
     ),
     _NavItem(icon: Icons.menu, label: 'Menü', routeName: RouteNames.menu),
   ];
@@ -38,9 +38,9 @@ class MainBottomNavBar extends StatelessWidget {
       // Arka plan rengi beyaz
       backgroundColor: Colors.white,
       // Seçili olmayan ikonların rengi
-      unselectedItemColor: Colors.grey[600],
+      unselectedItemColor: const Color(0x4F000000),
       // Seçili ikonun rengi
-      selectedItemColor: const Color(0xFF1B441A),
+      selectedItemColor: const Color(0xFF2E7D32),
       // Etiketlerin her zaman görünmesini sağlar
       showUnselectedLabels: true,
 

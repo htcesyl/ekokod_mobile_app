@@ -56,11 +56,7 @@ class PeriodSelector extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(30), // Yüksek corner radius
-        border: Border.all(
-          // %10 Opaklıkta siyah kenarlık
-          color: Color(0x1A000000),
-          width: 1.0,
-        ),
+        border: Border.all(color: Color(0x1A000000), width: 1.0),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
