@@ -1,53 +1,41 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_themes.dart';
 import 'package:ekokod_mobile_app/presentation/shared_widgets/main_bottom_navbar.dart';
 import 'package:ekokod_mobile_app/presentation/shared_widgets/data_summary_card.dart';
 import 'package:ekokod_mobile_app/presentation/shared_widgets/app_bar.dart';
-// DEMAND metrikleri için
 
-// HomePage bir StatelessWidget'tır. Durum yönetimi Cubit'te kalacağı için UI 'durumsuz'dur.
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Scaffold: Sayfanın temel çerçevesini (AppBar, Body, BottomBar) oluşturur.
-    return Scaffold(
-      appBar: const CustomAppBar(
-        pageTitle: 'Anasayfa', // ⬅️ Zorunlu parametre 1: Sayfa adı
-        weatherData: '21°C', // ⬅️ Zorunlu parametre 2: Hava durumu yer tutucusu
-      ),
-      // 1. AppBar: Başlık, "Anasayfa" yazısı ve hava durumu ikonunu içerir.
+    return Container(
+      decoration: const BoxDecoration(gradient: secondBackgroundGradient),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
 
-      // 2. BottomNavigationBar: Uygulama genelinde sabit kalan alt menü.
-      // selectedIndex: 0, Anasayfa sekmesinin seçili olduğunu belirtir.
-      bottomNavigationBar: const MainBottomNavBar(selectedIndex: 0),
+        appBar: const CustomAppBar(pageTitle: 'Anasayfa', weatherData: '21°C'),
 
-      // 3. Body: Tüm içeriğin kaydırılabilir olması için SingleChildScrollView kullanılır.
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          // İçerikleri sol tarafa hizalar.
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            // BÖLÜM 1: Reaktif Ceza Durumu ve Bugünlük Tüketim (Yan Yana Kartlar)
-            _buildSummaryCards(context),
+        bottomNavigationBar: const MainBottomNavBar(selectedIndex: 0),
 
-            const SizedBox(height: 24), // Bölümler arası dikey boşluk
-            // BÖLÜM 2: Elektrik Tüketimi Grafiği (Yıllık Tüketim)
-            _buildElectricityConsumptionChart(context),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              _buildSummaryCards(context),
+              const SizedBox(height: 24),
 
-            const SizedBox(height: 24),
+              _buildElectricityConsumptionChart(context),
+              const SizedBox(height: 24),
 
-            // BÖLÜM 3: Son Ay Fatura Özeti ve Butonu
-            _buildLastMonthBillSummary(context),
+              _buildLastMonthBillSummary(context),
+              const SizedBox(height: 24),
 
-            const SizedBox(height: 24),
-
-            // BÖLÜM 4: DEMAND Güç Özeti ve Göstergesi
-            _buildDemandSummary(context),
-
-            const SizedBox(height: 24),
-          ],
+              _buildDemandSummary(context),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );
@@ -57,26 +45,22 @@ class HomePage extends StatelessWidget {
   // YARDIMCI METOTLAR
   // ***************************************************************
 
-  // 1. AppBar Oluşturma Metodu
-
-  // 2. Özet Kartları (Reaktif Ceza / Bugünlük Tüketim) Metodu
   Widget _buildSummaryCards(BuildContext context) {
     return const Row(
       children: [
-        // 1. Kart: Reaktif Ceza Durumu (Para Birimi Olduğu İçin Rengi Kırmızı Olacak)
         Expanded(
           child: DataSummaryCard(
             title: 'Reaktif Ceza Durumu',
-            value: '₺0,00', // API'den gelene kadar yer tutucu
+            value: '₺0,00',
             isCurrency: true,
           ),
         ),
         SizedBox(width: 16),
-        // 2. Kart: Bugünlük Tüketim (Enerji Birimi Olduğu İçin Koyu Yeşil Olacak)
+
         Expanded(
           child: DataSummaryCard(
             title: 'Bugünlük Tüketim',
-            value: '32.40 kWh', // API'den gelene kadar yer tutucu
+            value: '32.40 kWh',
             isCurrency: false,
           ),
         ),
@@ -90,7 +74,7 @@ class HomePage extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
         ],
@@ -117,7 +101,7 @@ class HomePage extends StatelessWidget {
                   height: 1.2,
                 ),
               ),
-              // Kapasitif ve Endüktif Etiketler (Küçük Yüzde Değerleri)
+              // Kapasitif ve Endüktif Etiketler
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -129,7 +113,7 @@ class HomePage extends StatelessWidget {
                   _buildConsumptionTag(
                     'Endüktif',
                     '%2,45',
-                    const Color(0xFF7D967A),
+                    const Color(0xFF6DCF60),
                   ),
                 ],
               ),
@@ -137,7 +121,7 @@ class HomePage extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // GRAFİK ALANI (Gerçek grafik bileşeni burada kullanılacaktır - Örn: fl_chart)
+          // GRAFİK ALANI () fl_chart)
           Container(
             height: 200,
             color: Colors.grey[100],
@@ -150,14 +134,13 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // YARDIMCI WIDGET: Kapasitif/Endüktif Yüzde Etiketi
   Widget _buildConsumptionTag(String label, String value, Color color) {
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.2), // Hafif arka plan rengi
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(41),
       ),
       child: Text(
         '$label $value',
@@ -175,7 +158,7 @@ class HomePage extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
         ],
@@ -237,7 +220,7 @@ class HomePage extends StatelessWidget {
                 backgroundColor: const Color(0xFF396334),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(41),
                 ),
               ),
               child: const Text(
@@ -256,7 +239,7 @@ class HomePage extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
         ],
@@ -278,7 +261,6 @@ class HomePage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Progress Bar (Görseldeki renkli çubuk - ProgressIndicator kullanılır)
           LinearProgressIndicator(
             value:
                 0.8, // API'den gelen Demand oranına göre doluluk (0.0 ile 1.0 arası)
@@ -295,7 +277,6 @@ class HomePage extends StatelessWidget {
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Shared Widget kullanılıyor
               DemandMetricWidget(
                 label: 'Demand',
                 value: '84 kW',
