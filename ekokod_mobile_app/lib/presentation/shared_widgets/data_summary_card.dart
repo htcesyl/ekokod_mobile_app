@@ -82,7 +82,7 @@ class DemandMetricWidget extends StatelessWidget {
         // Metrik Adı (Örn: Demand)
         Text(
           label,
-          style: const TextStyle(color: Colors.black54, fontSize: 14),
+          style: const TextStyle(color: Colors.black54, fontSize: 10),
         ),
       ],
     );
