@@ -1,8 +1,9 @@
+import 'package:ekokod_mobile_app/core/constants/app_themes.dart';
 import 'package:flutter/material.dart';
 
 class DataSummaryCard extends StatelessWidget {
   final String title;
-  final String value; // API'den gelecek değer (Örn: "₺0,00" veya "32.40 kWh")
+  final String value; // API'den gelecek değer
   final bool
   isCurrency; // Değerin TL (Ceza) mi yoksa kWh (Tüketim) mı olduğunu anlamak için
 
@@ -19,27 +20,24 @@ class DataSummaryCard extends StatelessWidget {
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
-        ], // Kartlara hafif gölge vererek öne çıkarıyoruz.
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Color(0x1A000000), width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Başlık (Reaktif Ceza Durumu / Bugünlük Tüketim)
+          // Başlık
           Text(
             title,
-            style: const TextStyle(color: Colors.black54, fontSize: 14),
+            style: const TextStyle(color: AppColors.black, fontSize: 14),
           ),
-          const SizedBox(height: 8),
-          // Değer (₺0,00 / 32.40 kWh)
+          const SizedBox(height: 11),
+
           Text(
             value,
-            // API'den gelen veriye göre rengi belirliyoruz. Ceza (₺0,00) genelde kırmızıdır.
+            // API'den gelen veriye göre rengi belirliyoruz.
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: isCurrency ? Colors.red : const Color(0xFF1B441A),
             ),

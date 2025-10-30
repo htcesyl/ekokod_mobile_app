@@ -8,6 +8,9 @@ class AppColors {
   static const Color lightGreen = Color(0xFF396334);
   static const Color veryLightGreen = Color(0xFF7D967A);
 
+  //secondBackground
+  static const Color pastelGreen = Color(0xFF5B965C);
+
   // login Giriş Kartı Arkaplan Rengi (Örnek açık gri)
   static const Color cardBackground = Color(
     0xFFEBEBEB,
@@ -43,4 +46,12 @@ const LinearGradient appBackgroundGradient = LinearGradient(
     AppColors.lightGreen,
     AppColors.veryLightGreen,
   ],
+);
+
+//SecondBackground for home, analytics bills...
+const LinearGradient secondBackgroundGradient = LinearGradient(
+  begin: Alignment.topCenter,
+  end: Alignment.bottomCenter,
+  stops: [0.0, 0.93],
+  colors: [AppColors.pastelGreen, AppColors.white],
 );

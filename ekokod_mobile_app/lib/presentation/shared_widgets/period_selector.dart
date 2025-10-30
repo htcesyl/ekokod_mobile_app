@@ -50,8 +50,8 @@ class PeriodSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 278, // Figma'dan gelen yaklaşık genişlik
-      height: 34, // Figma'dan gelen yaklaşık yükseklik
+      width: 278,
+      height: 34,
       padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: AppColors.white,

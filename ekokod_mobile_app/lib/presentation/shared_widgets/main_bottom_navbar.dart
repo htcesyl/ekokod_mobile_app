@@ -47,7 +47,7 @@ class MainBottomNavBar extends StatelessWidget {
       currentIndex: selectedIndex,
       onTap: (index) {
         final item = _items[index];
-        context.goNamed(item.routeName); // <<< gerçek yönlendirme
+        context.goNamed(item.routeName);
       },
 
       items:
