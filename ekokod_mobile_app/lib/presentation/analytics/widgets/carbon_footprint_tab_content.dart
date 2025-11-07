@@ -98,13 +98,6 @@ class CarbonFootprintTabContent extends StatelessWidget {
                   color: AppColors.black,
                 ),
               ),
-              // Sağ Filtre (Bina Seçimi)
-              CustomDropdown(
-                label: '',
-                selectedItem: selectedBuilding,
-                items: availableBuildings,
-                onChanged: onBuildingChanged,
-              ),
             ],
           ),
         ),

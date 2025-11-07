@@ -27,6 +27,8 @@ class ConsumptionTabContent extends StatelessWidget {
       'Tüm Günler',
     ];
 
+    final List<String> seasonOptions = ['İlkbahar', 'Yaz', 'Sonbahar', 'Kış'];
+
     return Column(
       children: [
         // ----------------------------------------
@@ -37,23 +39,16 @@ class ConsumptionTabContent extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 5.0),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               // Sol Başlık
               const Text(
-                'Tüketim', // Başlık sadece "Tüketim" olarak kalsın, periyot bilgisi yukarıdan geliyor.
+                'Tüketim',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                   color: AppColors.black,
                 ),
-              ),
-              // Sağ Filtre (Bina Seçimi)
-              CustomDropdown(
-                label: '',
-                selectedItem: selectedBuilding,
-                items: availableBuildings,
-                onChanged: onBuildingChanged,
               ),
             ],
           ),
@@ -68,7 +63,7 @@ class ConsumptionTabContent extends StatelessWidget {
         // 2. Yük Profili Grafiği (Line Chart)
         // ----------------------------------------
 
-        // BAŞLIK VE FİLTRE (KARTIN DIŞINDA - DOĞRUDAN ROW KULLANIMI)
+        // BAŞLIK VE FİLTRE
         Padding(
           padding: const EdgeInsets.only(bottom: 5.0),
           child: Row(
@@ -83,14 +78,30 @@ class ConsumptionTabContent extends StatelessWidget {
                   color: AppColors.black,
                 ),
               ),
+
+              const Spacer(),
+
               // Sağ Filtre (Yük Profili Dropdown)
-              CustomDropdown(
-                label: 'Hafta İçi',
-                selectedItem: 'Hafta İçi',
-                items: profileOptions,
-                onChanged: (val) {
-                  // TODO: Yük profili filtresini yönet
-                },
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CustomDropdown(
+                    label: '',
+                    selectedItem: 'Sonbahar',
+                    items: seasonOptions,
+                    onChanged: (val) {
+                      // TODO: Yük profili filtresini yönet
+                    },
+                  ),
+                  CustomDropdown(
+                    label: '',
+                    selectedItem: 'Hafta İçi',
+                    items: profileOptions,
+                    onChanged: (val) {
+                      // TODO: Yük profili filtresini yönet
+                    },
+                  ),
+                ],
               ),
             ],
           ),

@@ -49,10 +49,6 @@ class AppRouter {
         name: RouteNames.menu,
         builder: (context, state) => const MenuPage(),
         routes: [
-          // ------------------------------------
-          // MENÜ İÇİ ALT ROTALAR (NESTED ROUTES)
-          // ------------------------------------
-          // Profil Sayfası
           GoRoute(
             path: RoutePaths.profile, // Tam yol: /menu/profile
             name: RouteNames.profile,
@@ -62,7 +58,6 @@ class AppRouter {
                 ),
           ),
 
-          // Tahmin Sayfası
           GoRoute(
             path: RoutePaths.prediction, // Tam yol: /menu/prediction
             name: RouteNames.prediction,

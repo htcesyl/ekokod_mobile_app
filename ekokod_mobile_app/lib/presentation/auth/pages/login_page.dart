@@ -1,3 +1,4 @@
+import 'package:ekokod_mobile_app/core/constants/app_assets.dart';
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_themes.dart';
 import 'package:go_router/go_router.dart';
@@ -35,20 +36,20 @@ class LoginPage extends StatelessWidget {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: const [
-                        SizedBox(height: 80),
-                        Text(
-                          'EKOKOD',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: AppColors.white,
-                            fontSize: 48,
-                            fontWeight: FontWeight.bold,
+                      children: [
+                        const SizedBox(height: 80),
+                        Center(
+                          child: Image.asset(
+                            AppAssets.logo,
+                            height: 96,
+                            fit: BoxFit.contain,
+                            //color: AppColors.white,
+                            //colorBlendMode: BlendMode.srcIn,
                           ),
                         ),
-                        SizedBox(height: 50),
-                        _LoginCard(),
-                        SizedBox(height: 40),
+                        const SizedBox(height: 50),
+                        const _LoginCard(),
+                        const SizedBox(height: 40),
                       ],
                     ),
                   ),

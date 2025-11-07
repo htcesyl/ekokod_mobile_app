@@ -14,7 +14,7 @@ class HomePage extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
 
-        appBar: const CustomAppBar(pageTitle: 'Anasayfa', weatherData: '21°C'),
+        appBar: const CustomAppBar(weatherData: '21°C'),
 
         bottomNavigationBar: const MainBottomNavBar(selectedIndex: 0),
 
@@ -41,28 +41,42 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // ***************************************************************
-  // YARDIMCI METOTLAR
-  // ***************************************************************
-
   Widget _buildSummaryCards(BuildContext context) {
-    return const Row(
+    return Column(
       children: [
-        Expanded(
-          child: DataSummaryCard(
-            title: 'Reaktif Ceza Durumu',
-            value: '₺0,00',
-            isCurrency: true,
-          ),
-        ),
-        SizedBox(width: 16),
+        const Row(
+          children: [
+            Expanded(
+              child: DataSummaryCard(
+                title: 'Reaktif Ceza Durumu',
+                value: '₺0,00',
+                isCurrency: true,
+              ),
+            ),
+            SizedBox(width: 16),
 
-        Expanded(
-          child: DataSummaryCard(
-            title: 'Bugünlük Tüketim',
-            value: '32.40 kWh',
-            isCurrency: false,
-          ),
+            Expanded(
+              child: DataSummaryCard(
+                title: 'Günlük Tüketim',
+                value: '32.40 kWh/Gün',
+                isCurrency: false,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        const Row(
+          children: [
+            Expanded(
+              child: DataSummaryCard(
+                title: 'Günlük Üretim',
+                value: '32.40 kWh/Gün',
+                isCurrency: false,
+              ),
+            ),
+            SizedBox(width: 16),
+            Expanded(child: SizedBox()), //boş satır
+          ],
         ),
       ],
     );
@@ -83,18 +97,39 @@ class HomePage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Elektrik Tüketimi',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          // ÜST SATIR: Sol başlık + sağ açıklama
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start, // üstten hizalansın
+            children: [
+              // Sol: başlık (çok satıra kayabilir)
+              const Expanded(
+                child: Text(
+                  'Son fatura dönemine\nait elektrik tüketimi',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Sağ: küçük açıklama (sağa hizalı, iki satır)
+              const Flexible(
+                child: Text(
+                  'Son Fatura Kesim Tarihinden Sonraki',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(fontSize: 14),
+                  maxLines: 2,
+                  softWrap: true,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+
+          const SizedBox(height: 18),
 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Ana Tüketim Değeri (API'den gelecek)
               const Text(
-                'Eylül 2025\n1.600,00 kWh',
+                'Ekim 2025\n1.600,00 kWh/ay',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,

@@ -22,6 +22,7 @@ class ProductionTabContent extends StatelessWidget {
   Widget build(BuildContext context) {
     // Üretim profili seçenekleri için mock data
     final List<String> profileOptions = ['24 Saat', '48 Saat', 'Tüm Günler'];
+    final List<String> seasonOptions = ['İlkbahar', 'Yaz', 'Sonbahar', 'Kış'];
 
     return Column(
       children: [
@@ -43,13 +44,6 @@ class ProductionTabContent extends StatelessWidget {
                   fontSize: 16,
                   color: AppColors.black,
                 ),
-              ),
-              // Sağ Filtre (Bina Seçimi)
-              CustomDropdown(
-                label: '',
-                selectedItem: selectedBuilding,
-                items: availableBuildings,
-                onChanged: onBuildingChanged,
               ),
             ],
           ),
@@ -81,14 +75,29 @@ class ProductionTabContent extends StatelessWidget {
                   color: AppColors.black,
                 ),
               ),
-              // Sağ Filtre (Profil Seçimi Dropdown)
-              CustomDropdown(
-                label: '24 Saat',
-                selectedItem: '24 Saat',
-                items: profileOptions,
-                onChanged: (val) {
-                  // TODO: Profil filtresini yönet
-                },
+
+              const Spacer(),
+              // Sağ Filtre
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CustomDropdown(
+                    label: '',
+                    selectedItem: 'Sonbahar',
+                    items: seasonOptions,
+                    onChanged: (val) {
+                      // TODO: Yük profili filtresini yönet
+                    },
+                  ),
+                  CustomDropdown(
+                    label: '',
+                    selectedItem: '24 Saat',
+                    items: profileOptions,
+                    onChanged: (val) {
+                      // TODO: Yük profili filtresini yönet
+                    },
+                  ),
+                ],
               ),
             ],
           ),

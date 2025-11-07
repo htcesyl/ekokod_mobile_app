@@ -50,10 +50,7 @@ class _BillsPageState extends State<BillsPage> {
       child: Scaffold(
         backgroundColor: Colors.transparent, // Gradyanın görünmesi için şeffaf
         // Custom AppBar
-        appBar: const CustomAppBar(
-          pageTitle: 'Faturalar',
-          weatherData: '21°C', // Mock Hava Durumu
-        ),
+        appBar: const CustomAppBar(weatherData: '21°C'),
 
         // Bottom Navigation Bar
         bottomNavigationBar: const MainBottomNavBar(
@@ -128,19 +125,12 @@ class _BillsPageState extends State<BillsPage> {
                   children: [
                     // Sol Başlık
                     const Text(
-                      'Faturalar - Bu yıl',
+                      'Faturalar - Son 12 Ay',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                         color: AppColors.black,
                       ),
-                    ),
-                    // Sağ Filtre (Dropdown)
-                    CustomDropdown(
-                      label: '',
-                      selectedItem: _selectedPeriodForChart,
-                      items: _chartPeriodOptions,
-                      onChanged: _handleChartPeriodChange,
                     ),
                   ],
                 ),

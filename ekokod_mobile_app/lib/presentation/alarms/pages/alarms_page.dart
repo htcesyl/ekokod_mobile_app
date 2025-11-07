@@ -31,7 +31,6 @@ class _AlarmPageState extends State<AlarmPage> {
         backgroundColor: Colors.transparent, // Gradyanın görünmesi için şeffaf
         // Custom AppBar
         appBar: const CustomAppBar(
-          pageTitle: 'Alarm', // Sayfa Başlığı
           weatherData: '21°C', // Mock Hava Durumu
         ),
 

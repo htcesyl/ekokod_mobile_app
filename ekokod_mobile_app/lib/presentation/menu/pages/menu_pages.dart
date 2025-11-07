@@ -27,7 +27,7 @@ class MenuPage extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
 
-        appBar: const CustomAppBar(pageTitle: 'Menü', weatherData: '21°C'),
+        appBar: const CustomAppBar(weatherData: '21°C'),
 
         bottomNavigationBar: const MainBottomNavBar(
           selectedIndex: 4, // 'Menü' sayfasının indeksi

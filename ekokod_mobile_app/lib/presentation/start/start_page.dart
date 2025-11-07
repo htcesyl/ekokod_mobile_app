@@ -1,3 +1,5 @@
+import 'package:ekokod_mobile_app/core/constants/app_assets.dart';
+import 'package:ekokod_mobile_app/presentation/shared_widgets/brand_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:ekokod_mobile_app/core/constants/app_themes.dart';
 import 'package:ekokod_mobile_app/core/constants/routes.dart';
@@ -36,17 +38,16 @@ class _StartPageState extends State<StartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 1. Arka Plan Gradient (app_themes.dart tan alıyoruz.)
+      // 1. Arka Plan
       body: Container(
         decoration: const BoxDecoration(gradient: appBackgroundGradient),
-        child: const Center(
-          child: Text(
-            'EKOKOD',
-            style: TextStyle(
-              color: AppColors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-            ),
+        child: Center(
+          child: Image.asset(
+            AppAssets.logo,
+            height: 96,
+            fit: BoxFit.contain,
+            color: AppColors.white,
+            colorBlendMode: BlendMode.srcIn,
           ),
         ),
       ),

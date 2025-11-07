@@ -24,16 +24,53 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   // Cubit'ten gelecek state'i yönetmek için placeholder değişkenler
   AnalyticsTab _selectedTab = AnalyticsTab.consumption;
   PeriodType _selectedPeriod = PeriodType.year;
-  String _selectedBuilding = 'Bina 1';
+  late String _selectedBuilding;
   int _currentYear = 2025;
 
-  // Bina listesi (Mock veri)
-  final List<String> _buildings = ['Bina 1', 'Bina 2', 'Tüm Binalar'];
+  @override
+  void initState() {
+    super.initState();
+    // Başlangıçta Tüketim sekmesinin ilk filtresini seçiyoruz.
+    _selectedBuilding = _availableFilters[_selectedTab]!.first;
+  }
+
+  // Dinamik olarak değişecek filtre listeleri (Mock Veri)
+  final Map<AnalyticsTab, List<String>> _availableFilters = {
+    // Tüketim için Bina listesi
+    AnalyticsTab.consumption: ['Bina 1', 'Bina 2', 'Tüm Binalar'],
+    // Üretim için Santral listesi
+    AnalyticsTab.production: ['Santral A', 'Santral B'],
+    // Karbon Ayak İzi için tüm binalar (veya daha genel bir seçenek)
+    AnalyticsTab.carbonFootprint: ['Tüm Binalar'],
+  };
+
+  // Seçili Sekmeye göre etiket metnini döndürür
+  String get _buildingSelectorLabel {
+    switch (_selectedTab) {
+      case AnalyticsTab.consumption:
+        return 'Bina Seçiniz';
+      case AnalyticsTab.production:
+        return 'Santral Seçiniz';
+      case AnalyticsTab.carbonFootprint:
+        return 'Seçiniz'; // Veya genel bir etiket
+      default:
+        return 'Bina Seçiniz';
+    }
+  }
+
+  // Seçili sekmeye göre mevcut filtre listesini döndürür
+  List<String> get _currentBuildingList {
+    return _availableFilters[_selectedTab] ?? ['Bina 1'];
+  }
 
   // Handle metotları...
   void _handleTabChange(AnalyticsTab tab) {
     setState(() {
       _selectedTab = tab;
+      final newFilterList = _availableFilters[tab] ?? ['Bina 1'];
+      if (newFilterList.isNotEmpty) {
+        _selectedBuilding = newFilterList.first;
+      }
     });
   }
 
@@ -59,26 +96,28 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
   // Sekme içeriği oluşturma metodu...
   Widget _buildTabContent(AnalyticsTab tab) {
+    final list = _currentBuildingList;
+
     switch (tab) {
       case AnalyticsTab.consumption:
         return ConsumptionTabContent(
           selectedPeriod: _selectedPeriod,
           selectedBuilding: _selectedBuilding,
-          availableBuildings: _buildings,
+          availableBuildings: list,
           onBuildingChanged: _handleBuildingChange,
         );
       case AnalyticsTab.production:
         return ProductionTabContent(
           selectedPeriod: _selectedPeriod,
           selectedBuilding: _selectedBuilding,
-          availableBuildings: _buildings,
+          availableBuildings: list,
           onBuildingChanged: _handleBuildingChange,
         );
       case AnalyticsTab.carbonFootprint:
         return CarbonFootprintTabContent(
           selectedPeriod: _selectedPeriod,
           selectedBuilding: _selectedBuilding,
-          availableBuildings: _buildings,
+          availableBuildings: list,
           onBuildingChanged: _handleBuildingChange,
         );
       default:
@@ -89,23 +128,14 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   // Ana Sayfa Yapısı
   @override
   Widget build(BuildContext context) {
-    // YENİ EKLENEN: Gradyan Arkaplan Konteyneri
     return Container(
-      decoration: const BoxDecoration(
-        // analyticsBackgroundGradient sabitini kullanıyoruz
-        gradient: secondBackgroundGradient,
-      ),
+      decoration: const BoxDecoration(gradient: secondBackgroundGradient),
       child: Scaffold(
-        // Arkaplanı şeffaf yapıyoruz ki altındaki gradyan görünsün
         backgroundColor: Colors.transparent,
-
-        // Custom App Bar (AppBar olarak kullanmak için PreferredSizeWidget implementasyonu)
         appBar: const CustomAppBar(
-          pageTitle: 'Veri Analizi',
           weatherData: '21°C', // Mock Hava Durumu
         ),
 
-        // Bottom Navigation Bar
         bottomNavigationBar: const MainBottomNavBar(
           selectedIndex: 1, // 'Veri Analizi' sayfasının indeksi
         ),
@@ -131,18 +161,18 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 2. Bina Seçimi
+                    // 2. Bina veya Santral Seçimi
                     Row(
                       children: [
-                        const Text(
-                          'Bina Seçiniz',
-                          style: TextStyle(fontSize: 14),
+                        Text(
+                          _buildingSelectorLabel,
+                          style: TextStyle(fontSize: 15),
                         ),
                         const SizedBox(width: 10),
                         CustomDropdown(
                           label: '',
                           selectedItem: _selectedBuilding,
-                          items: _buildings,
+                          items: _currentBuildingList,
                           onChanged:
                               _handleBuildingChange, // Cubit'e bağlanacak
                         ),
@@ -175,12 +205,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                 ),
               ),
 
-              // ------------------------------------
-              // SEKME İÇERİKLERİNİN GÖSTERİLDİĞİ ALAN
-              // ------------------------------------
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                // Seçilen sekmeye göre ilgili içeriği yüklüyoruz.
                 child: _buildTabContent(_selectedTab),
               ),
             ],

@@ -7,7 +7,7 @@ import '../../core/constants/app_themes.dart';
 typedef DropdownItem = String;
 
 class CustomDropdown extends StatelessWidget {
-  final String label; // "Bina Seçiniz" gibi etiket
+  final String label;
   final DropdownItem selectedItem;
   final List<DropdownItem> items;
   final ValueChanged<DropdownItem?> onChanged;
@@ -28,14 +28,14 @@ class CustomDropdown extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Etiket ("Bina Seçiniz")
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: Text(
-              label,
-              style: TextStyle(color: AppColors.black, fontSize: 14),
+          if (label.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Text(
+                label,
+                style: TextStyle(color: AppColors.black, fontSize: 14),
+              ),
             ),
-          ),
           // Dropdown Icon'ı
           const Icon(
             Icons.keyboard_arrow_down,
@@ -44,7 +44,7 @@ class CustomDropdown extends StatelessWidget {
           ),
           const SizedBox(width: 4),
 
-          // Değer (Bina 1, Bina 2 vb.)
+          // Değer
           DropdownButton<DropdownItem>(
             value: selectedItem,
             icon: const SizedBox.shrink(), // Varsayılan ikonu kaldır
