@@ -1,5 +1,4 @@
 import 'package:ekokod_mobile_app/core/constants/app_assets.dart';
-import 'package:ekokod_mobile_app/presentation/shared_widgets/brand_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:ekokod_mobile_app/core/constants/app_themes.dart';
 import 'package:ekokod_mobile_app/core/constants/routes.dart';
@@ -46,8 +45,6 @@ class _StartPageState extends State<StartPage> {
             AppAssets.logo,
             height: 96,
             fit: BoxFit.contain,
-            color: AppColors.white,
-            colorBlendMode: BlendMode.srcIn,
           ),
         ),
       ),

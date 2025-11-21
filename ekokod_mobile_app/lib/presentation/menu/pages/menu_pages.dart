@@ -6,6 +6,7 @@ import '../../../core/constants/routes.dart';
 import '../../shared_widgets/app_bar.dart';
 import '../../shared_widgets/main_bottom_navbar.dart';
 import '../../shared_widgets/menu_item_card.dart';
+import 'profile_page.dart';
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});

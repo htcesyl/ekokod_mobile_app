@@ -37,7 +37,7 @@ class MenuItemCard extends StatelessWidget {
             // İkon
             Icon(
               icon,
-              color: AppColors.mediumGreen, // Ana yeşil tonunu kullanabiliriz
+              color: AppColors.webColor, // Ana yeşil tonunu kullanabiliriz
               size: 24,
             ),
             const SizedBox(width: 15),
@@ -54,7 +54,7 @@ class MenuItemCard extends StatelessWidget {
               ),
             ),
 
-            // Sağ ok (opsiyonel)
+            // Sağ ok
             const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 18),
           ],
         ),

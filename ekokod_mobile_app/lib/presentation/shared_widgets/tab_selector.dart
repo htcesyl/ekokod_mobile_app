@@ -23,7 +23,7 @@ class TabSelector extends StatelessWidget {
 
     final Color backgroundColor =
         isActive
-            ? AppColors.activeTabBackground
+            ? const Color(0xFF09a42b)
             : AppColors.inactiveTabBackground; // Aktif olmayan D9D9D9 rengi
 
     return Expanded(
@@ -38,7 +38,7 @@ class TabSelector extends StatelessWidget {
 
             border: Border.all(
               color:
-                  isActive ? AppColors.activeTabBackground : Colors.transparent,
+                  isActive ? const Color(0xFF09a42b) : Colors.transparent,
               width: 0.5,
             ),
           ),

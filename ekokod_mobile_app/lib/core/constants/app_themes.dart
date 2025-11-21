@@ -7,14 +7,14 @@ class AppColors {
   static const Color mediumGreen = Color(0xFF1B441A);
   static const Color lightGreen = Color(0xFF396334);
   static const Color veryLightGreen = Color(0xFF7D967A);
-
-  //secondBackground
   static const Color pastelGreen = Color(0xFF5B965C);
 
   // login Giriş Kartı Arkaplan Rengi (Örnek açık gri)
   static const Color cardBackground = Color(
     0xFFEBEBEB,
-  ); // Taslak ekrandaki açık gri
+  ); 
+
+  static const Color webColor = Color(0xFF09a42b);
 
   // Tab Selector Renkleri
   static const Color activeTabBackground = Color(
@@ -29,6 +29,12 @@ class AppColors {
     0xFFD9D9D9,
   ); //aktif period rengi
 
+  // Gri tonları
+  static const Color lightGray = Color(0xFFE5E5E5);
+  static const Color mediumGray = Color(0xFFD9D9D9);
+  static const Color darkGray = Color(0xFFB0B0B0);
+  static const Color veryDarkGray = Color(0xFF1E1E1E);
+
   // Diğer renkler
   static const Color white = Colors.white;
   static const Color black = Colors.black;
@@ -38,13 +44,11 @@ class AppColors {
 const LinearGradient appBackgroundGradient = LinearGradient(
   begin: Alignment.topCenter,
   end: Alignment.bottomCenter,
-  stops: [0.0, 0.19, 0.36, 0.66, 1.0], // Gönderdiğiniz oranlar
-  colors: [
-    AppColors.darkGreen,
-    AppColors.mediumDarkGreen,
-    AppColors.mediumGreen,
-    AppColors.lightGreen,
-    AppColors.veryLightGreen,
+  stops: [0.0, 0.40, 0.99], 
+  colors: [ 
+    AppColors.white,
+    AppColors.mediumGray,
+    AppColors.webColor,
   ],
 );
 
@@ -52,6 +56,6 @@ const LinearGradient appBackgroundGradient = LinearGradient(
 const LinearGradient secondBackgroundGradient = LinearGradient(
   begin: Alignment.topCenter,
   end: Alignment.bottomCenter,
-  stops: [0.0, 0.93],
-  colors: [AppColors.pastelGreen, AppColors.white],
+  stops: [0.0, 0.99],
+  colors: [AppColors.mediumGray, AppColors.white],
 );

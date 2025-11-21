@@ -48,25 +48,13 @@ class HomePage extends StatelessWidget {
           children: [
             Expanded(
               child: DataSummaryCard(
-                title: 'Reaktif Ceza Durumu',
-                value: '₺0,00',
-                isCurrency: true,
-              ),
-            ),
-            SizedBox(width: 16),
-
-            Expanded(
-              child: DataSummaryCard(
                 title: 'Günlük Tüketim',
                 value: '32.40 kWh/Gün',
                 isCurrency: false,
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        const Row(
-          children: [
+            SizedBox(width: 16),
+
             Expanded(
               child: DataSummaryCard(
                 title: 'Günlük Üretim',
@@ -74,10 +62,9 @@ class HomePage extends StatelessWidget {
                 isCurrency: false,
               ),
             ),
-            SizedBox(width: 16),
-            Expanded(child: SizedBox()), //boş satır
           ],
         ),
+        //const SizedBox(height: 0),
       ],
     );
   }
@@ -108,11 +95,11 @@ class HomePage extends StatelessWidget {
                   style: TextStyle(fontSize: 14),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 50),
               // Sağ: küçük açıklama (sağa hizalı, iki satır)
               const Flexible(
                 child: Text(
-                  'Son Fatura Kesim Tarihinden Sonraki',
+                  'Reaktif Ceza Durumu',
                   textAlign: TextAlign.right,
                   style: TextStyle(fontSize: 14),
                   maxLines: 2,
@@ -143,12 +130,12 @@ class HomePage extends StatelessWidget {
                   _buildConsumptionTag(
                     'Kapasitif',
                     '%0,58',
-                    const Color(0xFF6DCF60),
+                    const Color(0xFF09a42b),
                   ),
                   _buildConsumptionTag(
-                    'Endüktif',
+                    'Endüktif ',
                     '%2,45',
-                    const Color(0xFF6DCF60),
+                    const Color(0xFF09a42b),
                   ),
                 ],
               ),
@@ -252,7 +239,7 @@ class HomePage extends StatelessWidget {
                 // Tıklanma olayı: GoRouter ile Fatura Detay sayfasına yönlendirilir.
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF396334),
+                backgroundColor: AppColors.webColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(41),
@@ -302,8 +289,8 @@ class HomePage extends StatelessWidget {
             minHeight: 10,
             backgroundColor: Colors.grey[200],
             valueColor: const AlwaysStoppedAnimation<Color>(
-              Color(0xFF396334),
-            ), // Yeşil doluluk rengi
+              AppColors.webColor,
+            ),
             borderRadius: BorderRadius.circular(5),
           ),
           const SizedBox(height: 16),

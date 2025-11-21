@@ -12,12 +12,24 @@ class AlarmPage extends StatefulWidget {
 }
 
 class _AlarmPageState extends State<AlarmPage> {
+  // Mock Filtre Değişkenleri (Cubit entegrasyonundan sonra Cubit State'inden alınacak)
+  String _selectedBuilding = 'Bina 1';
+  final List<String> _buildings = ['Bina 1', 'Bina 2', 'Tüm Binalar'];
+
   // Mock Alarmlar (Cubit'ten gelecek)
   final List<String> _mockAlarms = [
     'Tüketim Limiti Aşıldı (Bina 1)',
     'Reaktif Ceza Riski (Bina 2)',
     'Sayaç Bağlantı Hatası',
   ];
+
+  void _handleBuildingChange(String? building) {
+    if (building != null) {
+      setState(() {
+        _selectedBuilding = building;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,15 +51,6 @@ class _AlarmPageState extends State<AlarmPage> {
           selectedIndex: 3, // 'Alarm' sayfasının indeksi (0, 1, 2, 3)
         ),
 
-        // Sağ üstte yeni alarm eklemek için Floating Action Button
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            // TODO: Yeni alarm ekleme formu açılacak
-            print('Yeni Alarm Ekle tıklandı');
-          },
-          backgroundColor: AppColors.mediumGreen, // Ana yeşil tonunu kullanalım
-          child: const Icon(Icons.add, color: AppColors.white),
-        ),
 
         // Sayfa İçeriği
         body: SingleChildScrollView(
@@ -55,6 +58,25 @@ class _AlarmPageState extends State<AlarmPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ------------------------------------
+              // 1. Bina Seçimi Filtresi
+              // ------------------------------------
+              Row(
+                children: [
+                  const Text('Bina Seçiniz', style: TextStyle(fontSize: 14)),
+                  const SizedBox(width: 10),
+                  CustomDropdown(
+                    label: '',
+                    selectedItem: _selectedBuilding,
+                    items: _buildings,
+                    onChanged: _handleBuildingChange,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              // ------------------------------------
+              // 2. Aktif Alarmlar Başlığı
+              // ------------------------------------
               const Text(
                 'Aktif Alarmlar',
                 style: TextStyle(
@@ -83,7 +105,7 @@ class _AlarmPageState extends State<AlarmPage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       elevation: 3,
       child: ListTile(
-        leading: Icon(Icons.notifications_active, color: AppColors.mediumGreen),
+        leading: Icon(Icons.notifications_active, color: AppColors.webColor),
         title: Text(title),
         subtitle: const Text('23 Ekim 2025, 14:30'),
         trailing: Switch(
@@ -91,7 +113,7 @@ class _AlarmPageState extends State<AlarmPage> {
           onChanged: (bool value) {
             // TODO: Alarm durumunu güncelleme Cubit çağrısı
           },
-          activeColor: AppColors.lightGreen,
+          activeColor: AppColors.webColor,
         ),
       ),
     );

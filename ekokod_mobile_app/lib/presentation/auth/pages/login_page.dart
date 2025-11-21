@@ -141,7 +141,7 @@ class _LoginCardState extends State<_LoginCard> {
               child: const Text(
                 'Şifremi Unuttum',
                 style: TextStyle(
-                  color: AppColors.mediumGreen,
+                  color: AppColors.darkGreen,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
@@ -161,10 +161,10 @@ class _LoginCardState extends State<_LoginCard> {
               context.goNamed(RouteNames.home); //geçici yönlendirme
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.lightGreen, // Yeşil buton rengi
+              backgroundColor: AppColors.webColor, // Yeşil buton rengi
               padding: const EdgeInsets.symmetric(vertical: 18),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
+                borderRadius: BorderRadius.circular(41),
               ),
               elevation: 5,
             ),
