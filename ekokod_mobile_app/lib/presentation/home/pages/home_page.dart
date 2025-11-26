@@ -1,11 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../core/constants/app_themes.dart';
+import '../../../application/notification/notification_cubit.dart';
 import 'package:ekokod_mobile_app/presentation/shared_widgets/main_bottom_navbar.dart';
 import 'package:ekokod_mobile_app/presentation/shared_widgets/data_summary_card.dart';
 import 'package:ekokod_mobile_app/presentation/shared_widgets/app_bar.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+
+    // TODO: Buraya gerçek login olmuş kullanıcının id'sini koyacaksın.
+    const testUserId = 'test-user-123';
+
+    // Push notification sistemini başlat:
+    // - Bildirim izni iste
+    // - FCM token al
+    // - Token'ı backend'e kaydetmeye çalış
+    // - Listener'ları kur
+    context.read<NotificationCubit>().init(
+          userId: testUserId,
+          platform: 'android',
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,36 +68,29 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildSummaryCards(BuildContext context) {
-    return Column(
+    return const Row(
       children: [
-        const Row(
-          children: [
-            Expanded(
-              child: DataSummaryCard(
-                title: 'Günlük Tüketim',
-                value: '32.40 kWh/Gün',
-                isCurrency: false,
-              ),
-            ),
-            SizedBox(width: 16),
-
-            Expanded(
-              child: DataSummaryCard(
-                title: 'Günlük Üretim',
-                value: '32.40 kWh/Gün',
-                isCurrency: false,
-              ),
-            ),
-          ],
+        Expanded(
+          child: DataSummaryCard(
+            title: 'Günlük Tüketim',
+            value: '32.40 kWh/Gün',
+            isCurrency: false,
+          ),
         ),
-        //const SizedBox(height: 0),
+        SizedBox(width: 16),
+        Expanded(
+          child: DataSummaryCard(
+            title: 'Günlük Üretim',
+            value: '32.40 kWh/Gün',
+            isCurrency: false,
+          ),
+        ),
       ],
     );
   }
 
   // 3. Elektrik Tüketimi Grafiği Metodu
   Widget _buildElectricityConsumptionChart(BuildContext context) {
-    // Grafiği ve özetini saran ana kapsayıcı (Card görünümü için)
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -84,20 +103,17 @@ class HomePage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ÜST SATIR: Sol başlık + sağ açıklama
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start, // üstten hizalansın
-            children: [
-              // Sol: başlık (çok satıra kayabilir)
-              const Expanded(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Expanded(
                 child: Text(
                   'Son fatura dönemine\nait elektrik tüketimi',
                   style: TextStyle(fontSize: 14),
                 ),
               ),
-              const SizedBox(width: 50),
-              // Sağ: küçük açıklama (sağa hizalı, iki satır)
-              const Flexible(
+              SizedBox(width: 50),
+              Flexible(
                 child: Text(
                   'Reaktif Ceza Durumu',
                   textAlign: TextAlign.right,
@@ -108,13 +124,10 @@ class HomePage extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 18),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Ana Tüketim Değeri (API'den gelecek)
               const Text(
                 'Ekim 2025\n1.600,00 kWh/ay',
                 style: TextStyle(
@@ -123,7 +136,6 @@ class HomePage extends StatelessWidget {
                   height: 1.2,
                 ),
               ),
-              // Kapasitif ve Endüktif Etiketler
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -142,8 +154,6 @@ class HomePage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-
-          // GRAFİK ALANI () fl_chart)
           Container(
             height: 200,
             color: Colors.grey[100],
@@ -156,12 +166,12 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildConsumptionTag(String label, String value, Color color) {
+  static Widget _buildConsumptionTag(String label, String value, Color color) {
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2), // Hafif arka plan rengi
+        color: color.withOpacity(0.2),
         borderRadius: BorderRadius.circular(41),
       ),
       child: Text(
@@ -175,7 +185,6 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // 4. Son Ay Fatura Özeti Metodu
   Widget _buildLastMonthBillSummary(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
@@ -194,13 +203,10 @@ class HomePage extends StatelessWidget {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-
-          // Tutar ve Birim Fiyat Yan Yana
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              // Fatura Tutarı (₺4.608,25)
-              const Column(
+            children: const [
+              Column(
                 children: [
                   Text('Eylül 2025', style: TextStyle(color: Colors.black54)),
                   Text(
@@ -213,8 +219,7 @@ class HomePage extends StatelessWidget {
                   ),
                 ],
               ),
-              // Birim Fiyat (₺4,90)
-              const Column(
+              Column(
                 children: [
                   Text('Birim Fiyat', style: TextStyle(color: Colors.black54)),
                   Text(
@@ -230,13 +235,11 @@ class HomePage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-
-          // Fatura Detayı Butonu
           SizedBox(
-            width: double.infinity, // Butonu tam genişlik yapar
+            width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                // Tıklanma olayı: GoRouter ile Fatura Detay sayfasına yönlendirilir.
+                // Fatura detayı sayfasına yönlendirme
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.webColor,
@@ -256,7 +259,6 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // 5. DEMAND Güç Özeti Metodu
   Widget _buildDemandSummary(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
@@ -270,7 +272,6 @@ class HomePage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Başlık ve Tarih
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -282,10 +283,8 @@ class HomePage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-
           LinearProgressIndicator(
-            value:
-                0.8, // API'den gelen Demand oranına göre doluluk (0.0 ile 1.0 arası)
+            value: 0.8,
             minHeight: 10,
             backgroundColor: Colors.grey[200],
             valueColor: const AlwaysStoppedAnimation<Color>(
@@ -294,8 +293,6 @@ class HomePage extends StatelessWidget {
             borderRadius: BorderRadius.circular(5),
           ),
           const SizedBox(height: 16),
-
-          // Açıklama Metinleri (Demand, Sözleşme Gücü, Kurulu Güç)
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -308,7 +305,7 @@ class HomePage extends StatelessWidget {
                 label: 'Sözleşme Gücü',
                 value: '84 kW',
                 color: Color(0xFF6DCF60),
-              ), // Yeşil-Sarı Tonu
+              ),
               DemandMetricWidget(
                 label: 'Kurulu Güç',
                 value: '84 kW',

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "341300764468",
+    "project_id": "ekokod-e31be",
+    "storage_bucket": "ekokod-e31be.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:341300764468:android:75325c77c1ff15646c4f61",
+        "android_client_info": {
+          "package_name": "com.example.ekokod_mobile_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBl-st9sj3rgEzorQgrHuZcmYxDPkfIN8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
