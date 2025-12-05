@@ -1,63 +1,87 @@
 import 'package:ekokod_mobile_app/core/constants/app_assets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../core/constants/app_themes.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/routes.dart';
+import '../../../application/auth/auth_cubit.dart';
+import '../../../injections/injection_container.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // Klavye açılınca ekran yüksekliği küçülsün (AndroidManifest'te adjustResize de var)
-      resizeToAvoidBottomInset: true,
-      body: Stack(
-        children: [
-          // --- Arka plan: klavyeden bağımsız, tam ekran ---
-          const Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(gradient: appBackgroundGradient),
-            ),
-          ),
+    return BlocProvider(
+      // AuthCubit'i DI üzerinden alıyoruz
+      create: (_) => sl<AuthCubit>(),
+      child: BlocConsumer<AuthCubit, AuthState>(
+        listener: (context, state) {
+          if (state is AuthAuthenticated) {
+            // ✅ Sadece backend başarılı login dönerse home'a git
+            context.goNamed(RouteNames.home);
+          } else if (state is AuthError) {
+            // ❌ Hata varsa kullanıcıya göster
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
+        builder: (context, state) {
+          final isLoading = state is AuthLoading;
 
-          // --- İçerik: sadece yatay padding, klavye için extra bottom padding YOK ---
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // adjustResize ile constraints.maxHeight klavye açılınca küçülür
-                return SingleChildScrollView(
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 80),
-                        Center(
-                          child: Image.asset(
-                            AppAssets.logo,
-                            height: 96,
-                            fit: BoxFit.contain,
-                            //color: AppColors.white,
-                            //colorBlendMode: BlendMode.srcIn,
+          return Scaffold(
+            // Klavye açılınca ekran yüksekliği küçülsün
+            resizeToAvoidBottomInset: true,
+            body: Stack(
+              children: [
+                // --- Arka plan: klavyeden bağımsız, tam ekran ---
+                const Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(gradient: appBackgroundGradient),
+                  ),
+                ),
+
+                // --- İçerik ---
+                SafeArea(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // adjustResize ile constraints.maxHeight klavye açılınca küçülür
+                      return SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: 80),
+                              Center(
+                                child: Image.asset(
+                                  AppAssets.logo,
+                                  height: 96,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                              const SizedBox(height: 50),
+                              _LoginCard(isLoading: isLoading),
+                              const SizedBox(height: 40),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 50),
-                        const _LoginCard(),
-                        const SizedBox(height: 40),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
+                ),
+              ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -65,14 +89,16 @@ class LoginPage extends StatelessWidget {
 
 // *** Özel Widget: _LoginCard ***
 class _LoginCard extends StatefulWidget {
-  const _LoginCard();
+  final bool isLoading;
+
+  const _LoginCard({required this.isLoading});
 
   @override
   State<_LoginCard> createState() => _LoginCardState();
 }
 
 class _LoginCardState extends State<_LoginCard> {
-  // 3. Form verilerini tutmak için Controller'lar
+  // Form verilerini tutmak için Controller'lar
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -109,7 +135,7 @@ class _LoginCardState extends State<_LoginCard> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: AppColors.darkGreen, // En koyu yeşili kullanabiliriz
+              color: AppColors.darkGreen, // En koyu yeşil
             ),
           ),
           const SizedBox(height: 30),
@@ -152,14 +178,41 @@ class _LoginCardState extends State<_LoginCard> {
 
           // Giriş Yap Butonu
           ElevatedButton(
-            onPressed: () {
-              // TODO: Giriş Yap Cubit/Command Tetikleme İşlemi buraya gelecek
-              final email = _emailController.text;
-              final password = _passwordController.text;
-              debugPrint('Giriş Denemesi: $email / $password');
-              // Navigator.of(context).pushReplacementNamed(Routes.homeRoute); // Başarılıysa yönlendirme
-              context.goNamed(RouteNames.home); //geçici yönlendirme
-            },
+            onPressed: widget.isLoading
+                ? null
+                : () {
+                    final email = _emailController.text.trim();
+                    final password = _passwordController.text.trim();
+
+                    // 1) Basit validasyon
+                    if (email.isEmpty || password.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content:
+                              Text('E-posta ve şifre alanları boş olamaz.'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (!email.contains('@')) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Geçerli bir e-posta adresi girin.'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Debug
+                    debugPrint('Giriş Denemesi: $email / $password');
+
+                    // 2) Artık direkt home'a gitmek YOK → önce cubit üzerinden backend'e isteği at
+                    context.read<AuthCubit>().login(
+                          email: email,
+                          password: password,
+                        );
+                  },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.webColor, // Yeşil buton rengi
               padding: const EdgeInsets.symmetric(vertical: 18),
@@ -168,14 +221,24 @@ class _LoginCardState extends State<_LoginCard> {
               ),
               elevation: 5,
             ),
-            child: const Text(
-              'Giriş Yap',
-              style: TextStyle(
-                fontSize: 18,
-                color: AppColors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: widget.isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppColors.white),
+                    ),
+                  )
+                : const Text(
+                    'Giriş Yap',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: AppColors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
           ),
         ],
       ),
