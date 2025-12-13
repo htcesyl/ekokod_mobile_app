@@ -22,3 +22,7 @@ class NotificationEndpoints {
   static const String list = '/notifications';
   static const String markRead = '/notifications/read';
 }
+
+class AlarmEndpoints {
+  static const String list = '/alarms';
+}

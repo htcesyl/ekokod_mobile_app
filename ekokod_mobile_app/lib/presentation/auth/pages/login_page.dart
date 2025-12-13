@@ -6,17 +6,14 @@ import '../../../core/constants/app_themes.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/routes.dart';
 import '../../../application/auth/auth_cubit.dart';
-import '../../../injections/injection_container.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      // AuthCubit'i DI üzerinden alıyoruz
-      create: (_) => sl<AuthCubit>(),
-      child: BlocConsumer<AuthCubit, AuthState>(
+    // AuthCubit artık global olarak sağlanıyor (main.dart'ta)
+    return BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
             // ✅ Sadece backend başarılı login dönerse home'a git
@@ -82,7 +79,6 @@ class LoginPage extends StatelessWidget {
             ),
           );
         },
-      ),
     );
   }
 }

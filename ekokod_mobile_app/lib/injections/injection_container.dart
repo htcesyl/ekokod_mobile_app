@@ -20,6 +20,12 @@ import '../data/repositories/notification_repository_impl.dart';
 import '../domain/repositories/notification_repository.dart';
 import '../application/notification/notification_cubit.dart';
 
+// ALARM
+import '../data/datasources/remote_alarm_datasource.dart';
+import '../data/repositories/alarm_repository_impl.dart';
+import '../domain/repositories/i_alarm_repository.dart';
+import '../application/alarms/alarm_cubit.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -93,6 +99,25 @@ Future<void> init() async {
     () => NotificationCubit(
       notificationRepository: sl(),
       firebaseMessaging: sl(),
+    ),
+  );
+
+  // ========= ALARM =========
+
+  // Data source
+  sl.registerLazySingleton<RemoteAlarmDataSource>(
+    () => RemoteAlarmDataSourceImpl(sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<IAlarmRepository>(
+    () => AlarmRepositoryImpl(sl()),
+  );
+
+  // Cubit
+  sl.registerFactory<AlarmCubit>(
+    () => AlarmCubit(
+      alarmRepository: sl(),
     ),
   );
 

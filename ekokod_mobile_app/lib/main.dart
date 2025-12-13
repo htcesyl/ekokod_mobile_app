@@ -7,6 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/router/app_router.dart';
 import 'injections/injection_container.dart' as di;
 import 'application/notification/notification_cubit.dart';
+import 'application/auth/auth_cubit.dart';
 
 /// Uygulama arka plandayken gelen FCM mesajlarını yakalayan fonksiyon.
 /// Top-level (dosyanın en üst seviyesinde) olmak zorunda.
@@ -42,6 +43,12 @@ class MyApp extends StatelessWidget {
         // Bildirimleri yönetecek Cubit'i tüm uygulamaya sağlıyoruz
         BlocProvider<NotificationCubit>(
           create: (_) => di.sl<NotificationCubit>(),
+        ),
+        // AuthCubit'i global olarak sağlıyoruz (login state'i korunur)
+        // LazySingleton olarak kayıtlı olduğu için aynı instance kullanılır
+        BlocProvider<AuthCubit>(
+          create: (_) => di.sl<AuthCubit>(),
+          lazy: false, // Hemen oluştur, state'i koru
         ),
         // İleride başka Cubit/Bloc'ların varsa buraya ekleyebilirsin
       ],
