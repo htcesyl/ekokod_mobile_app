@@ -26,3 +26,15 @@ class NotificationEndpoints {
 class AlarmEndpoints {
   static const String list = '/alarms';
 }
+
+class BuildingEndpoints {
+  static const String list = '/building';
+}
+
+class AnalyzerEndpoints {
+  static const String list = '/analyzer';
+}
+
+class ConsumptionEndpoints {
+  static const String list = '/consumption';
+}

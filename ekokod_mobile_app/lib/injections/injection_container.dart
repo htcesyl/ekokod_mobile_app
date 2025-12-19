@@ -26,6 +26,21 @@ import '../data/repositories/alarm_repository_impl.dart';
 import '../domain/repositories/i_alarm_repository.dart';
 import '../application/alarms/alarm_cubit.dart';
 
+// BUILDING
+import '../data/datasources/remote_building_datasource.dart';
+import '../data/repositories/building_repository_impl.dart';
+import '../domain/repositories/i_building_repository.dart';
+
+// ANALYZER
+import '../data/datasources/remote_analyzer_datasource.dart';
+import '../data/repositories/analyzer_repository_impl.dart';
+import '../domain/repositories/i_analyzer_repository.dart';
+
+// CONSUMPTION
+import '../data/datasources/remote_consumption_datasource.dart';
+import '../data/repositories/consumption_repository_impl.dart';
+import '../domain/repositories/i_consumption_repository.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -119,6 +134,42 @@ Future<void> init() async {
     () => AlarmCubit(
       alarmRepository: sl(),
     ),
+  );
+
+  // ========= BUILDING =========
+
+  // Data source
+  sl.registerLazySingleton<RemoteBuildingDataSource>(
+    () => RemoteBuildingDataSourceImpl(sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<IBuildingRepository>(
+    () => BuildingRepositoryImpl(sl()),
+  );
+
+  // ========= ANALYZER =========
+
+  // Data source
+  sl.registerLazySingleton<RemoteAnalyzerDataSource>(
+    () => RemoteAnalyzerDataSourceImpl(sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<IAnalyzerRepository>(
+    () => AnalyzerRepositoryImpl(sl()),
+  );
+
+  // ========= CONSUMPTION =========
+
+  // Data source
+  sl.registerLazySingleton<RemoteConsumptionDataSource>(
+    () => RemoteConsumptionDataSourceImpl(sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<IConsumptionRepository>(
+    () => ConsumptionRepositoryImpl(sl()),
   );
 
   // ========= DİĞER MODÜLLER İÇİN YER =========
