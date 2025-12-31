@@ -7,16 +7,24 @@ part 'building_model.g.dart';
 
 @JsonSerializable()
 class TariffModel {
+  @JsonKey(name: 'originalTariffId')
   final String originalTariffId;
+  @JsonKey(name: 'effectiveFrom')
   final String effectiveFrom;
   final String currency;
+  @JsonKey(name: 'energy_type')
   final String energyType;
+  @JsonKey(name: 'distribution_type')
   final String distributionType;
+  @JsonKey(name: 'distribution_system_user')
   final String distributionSystemUser;
+  @JsonKey(name: 'price_type')
   final String priceType;
   final String term;
+  @JsonKey(name: 'supply_company')
   final String supplyCompany;
   final TariffPriceModel price;
+  @JsonKey(name: 'isDefault')
   final bool isDefault;
 
   TariffModel({
@@ -41,15 +49,25 @@ class TariffModel {
 
 @JsonSerializable()
 class TariffPriceModel {
+  @JsonKey(name: 'multi_time_price')
   final MultiTimePriceModel? multiTimePrice;
+  @JsonKey(name: 'power_price')
   final double powerPrice;
+  @JsonKey(name: 'overuse_price')
   final double overusePrice;
+  @JsonKey(name: 'single_time_price')
   final double? singleTimePrice;
+  @JsonKey(name: 'reactive_power_price')
   final double reactivePowerPrice;
+  @JsonKey(name: 'distribution_cost')
   final double distributionCost;
+  @JsonKey(name: 'green_energy_price')
   final double? greenEnergyPrice;
+  @JsonKey(name: 'green_energy_distribution_cost')
   final double? greenEnergyDistributionCost;
+  @JsonKey(name: 'vatRate')
   final double vatRate;
+  @JsonKey(name: 'otherTaxesRate')
   final double otherTaxesRate;
 
   TariffPriceModel({
@@ -93,6 +111,7 @@ class MultiTimePriceModel {
 class BuildingModel {
   @JsonKey(name: '_id')
   final String id;
+  @JsonKey(name: 'company_id')
   final String companyId;
   final String name;
   final String address;
@@ -100,14 +119,21 @@ class BuildingModel {
   final double? long;
   final int? floors;
   final List<dynamic> contactPersons;
+  @JsonKey(name: 'personel_count')
   final int? personelCount;
+  @JsonKey(name: 'total_area')
   final double? totalArea;
   final TariffModel? tariff;
   final String? sector;
+  @JsonKey(name: 'billCutoffDay')
   final int? billCutoffDay;
+  @JsonKey(name: 'createdAt')
   final DateTime? createdAt;
+  @JsonKey(name: 'updatedAt')
   final DateTime? updatedAt;
+  @JsonKey(name: '__v')
   final int? v;
+  @JsonKey(name: 'user_in_charge')
   final String? userInCharge;
   
   // billHistory Map<String, BillHistoryItemModel> olarak parse edilecek
