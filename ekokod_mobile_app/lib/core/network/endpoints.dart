@@ -38,3 +38,9 @@ class AnalyzerEndpoints {
 class ConsumptionEndpoints {
   static const String list = '/consumption';
 }
+
+class ProductionConsumptionEndpoints {
+  static const String daily = '/production-consumption/daily';
+  static const String latest = '/production-consumption/latest';
+  static const String create = '/production-consumption';
+}

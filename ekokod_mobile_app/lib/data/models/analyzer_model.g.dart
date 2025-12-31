@@ -32,19 +32,16 @@ AnalyzerModel _$AnalyzerModelFromJson(Map<String, dynamic> json) =>
       lastLoadProfileDate: json['lastLoadProfileDate'] as String?,
       lastEndexDate: json['lastEndexDate'] as String?,
       definitionType: (json['definitionType'] as num).toInt(),
-      lastDataDate:
-          json['lastDataDate'] == null
-              ? null
-              : DateTime.parse(json['lastDataDate'] as String),
+      lastDataDate: json['lastDataDate'] == null
+          ? null
+          : DateTime.parse(json['lastDataDate'] as String),
       isActive: json['isActive'] as bool,
-      createdAt:
-          json['createdAt'] == null
-              ? null
-              : DateTime.parse(json['createdAt'] as String),
-      updatedAt:
-          json['updatedAt'] == null
-              ? null
-              : DateTime.parse(json['updatedAt'] as String),
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
+      updatedAt: json['updatedAt'] == null
+          ? null
+          : DateTime.parse(json['updatedAt'] as String),
       v: (json['v'] as num?)?.toInt(),
       billHistoryJson: json['billHistory'] as Map<String, dynamic>?,
     );
@@ -87,10 +84,9 @@ AnalyzerResponseModel _$AnalyzerResponseModelFromJson(
   Map<String, dynamic> json,
 ) => AnalyzerResponseModel(
   success: json['success'] as bool,
-  analyzers:
-      (json['analyzers'] as List<dynamic>)
-          .map((e) => AnalyzerModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
+  analyzers: (json['analyzers'] as List<dynamic>)
+      .map((e) => AnalyzerModel.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$AnalyzerResponseModelToJson(

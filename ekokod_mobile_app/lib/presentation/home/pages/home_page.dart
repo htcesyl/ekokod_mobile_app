@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/app_themes.dart';
 import '../../../application/notification/notification_cubit.dart';
+import '../../../application/home/home_cubit.dart';
 import 'package:ekokod_mobile_app/presentation/shared_widgets/main_bottom_navbar.dart';
 import 'package:ekokod_mobile_app/presentation/shared_widgets/data_summary_card.dart';
 import 'package:ekokod_mobile_app/presentation/shared_widgets/app_bar.dart';
@@ -31,6 +32,9 @@ class _HomePageState extends State<HomePage> {
           userId: testUserId,
           platform: 'android',
         );
+
+    // En son üretim-tüketim verisini yükle
+    context.read<HomeCubit>().loadLatestProductionConsumption();
   }
 
   @override
@@ -68,24 +72,94 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildSummaryCards(BuildContext context) {
-    return const Row(
-      children: [
-        Expanded(
-          child: DataSummaryCard(
-            title: 'Günlük Tüketim',
-            value: '32.40 kWh/Gün',
-            isCurrency: false,
-          ),
-        ),
-        SizedBox(width: 16),
-        Expanded(
-          child: DataSummaryCard(
-            title: 'Günlük Üretim',
-            value: '32.40 kWh/Gün',
-            isCurrency: false,
-          ),
-        ),
-      ],
+    return BlocBuilder<HomeCubit, HomeState>(
+      builder: (context, state) {
+        if (state is HomeLoaded) {
+          final consumption = state.data.dailyConsumption;
+          final production = state.data.dailyProduction;
+          
+          return Row(
+            children: [
+              Expanded(
+                child: DataSummaryCard(
+                  title: 'Günlük Tüketim',
+                  value: '${consumption.toStringAsFixed(2)} kWh/Gün',
+                  isCurrency: false,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: DataSummaryCard(
+                  title: 'Günlük Üretim',
+                  value: '${production.toStringAsFixed(2)} kWh/Gün',
+                  isCurrency: false,
+                ),
+              ),
+            ],
+          );
+        } else if (state is HomeLoading) {
+          return const Row(
+            children: [
+              Expanded(
+                child: DataSummaryCard(
+                  title: 'Günlük Tüketim',
+                  value: 'Yükleniyor...',
+                  isCurrency: false,
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: DataSummaryCard(
+                  title: 'Günlük Üretim',
+                  value: 'Yükleniyor...',
+                  isCurrency: false,
+                ),
+              ),
+            ],
+          );
+        } else if (state is HomeError) {
+          return Row(
+            children: [
+              Expanded(
+                child: DataSummaryCard(
+                  title: 'Günlük Tüketim',
+                  value: 'Hata',
+                  isCurrency: false,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: DataSummaryCard(
+                  title: 'Günlük Üretim',
+                  value: 'Hata',
+                  isCurrency: false,
+                ),
+              ),
+            ],
+          );
+        } else {
+          // HomeInitial
+          return const Row(
+            children: [
+              Expanded(
+                child: DataSummaryCard(
+                  title: 'Günlük Tüketim',
+                  value: '-',
+                  isCurrency: false,
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: DataSummaryCard(
+                  title: 'Günlük Üretim',
+                  value: '-',
+                  isCurrency: false,
+                ),
+              ),
+            ],
+          );
+        }
+      },
     );
   }
 

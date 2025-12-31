@@ -87,12 +87,9 @@ Map<String, dynamic> _$PaginationModelToJson(PaginationModel instance) =>
 ConsumptionResponseModel _$ConsumptionResponseModelFromJson(
   Map<String, dynamic> json,
 ) => ConsumptionResponseModel(
-  consumption:
-      (json['consumption'] as List<dynamic>?)
-          ?.map(
-            (e) => ConsumptionPointModel.fromJson(e as Map<String, dynamic>),
-          )
-          .toList(),
+  consumption: (json['consumption'] as List<dynamic>?)
+      ?.map((e) => ConsumptionPointModel.fromJson(e as Map<String, dynamic>))
+      .toList(),
   consumptions: (json['consumptions'] as Map<String, dynamic>?)?.map(
     (k, e) => MapEntry(
       k,
@@ -101,12 +98,9 @@ ConsumptionResponseModel _$ConsumptionResponseModelFromJson(
           .toList(),
     ),
   ),
-  pagination:
-      json['pagination'] == null
-          ? null
-          : PaginationModel.fromJson(
-            json['pagination'] as Map<String, dynamic>,
-          ),
+  pagination: json['pagination'] == null
+      ? null
+      : PaginationModel.fromJson(json['pagination'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$ConsumptionResponseModelToJson(

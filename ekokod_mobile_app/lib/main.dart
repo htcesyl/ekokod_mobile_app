@@ -8,6 +8,7 @@ import 'core/router/app_router.dart';
 import 'injections/injection_container.dart' as di;
 import 'application/notification/notification_cubit.dart';
 import 'application/auth/auth_cubit.dart';
+import 'application/home/home_cubit.dart';
 
 /// Uygulama arka plandayken gelen FCM mesajlarını yakalayan fonksiyon.
 /// Top-level (dosyanın en üst seviyesinde) olmak zorunda.
@@ -49,6 +50,10 @@ class MyApp extends StatelessWidget {
         BlocProvider<AuthCubit>(
           create: (_) => di.sl<AuthCubit>(),
           lazy: false, // Hemen oluştur, state'i koru
+        ),
+        // HomeCubit'i global olarak sağlıyoruz (anasayfa verileri için)
+        BlocProvider<HomeCubit>(
+          create: (_) => di.sl<HomeCubit>(),
         ),
         // İleride başka Cubit/Bloc'ların varsa buraya ekleyebilirsin
       ],

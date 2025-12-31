@@ -51,8 +51,9 @@ BillHistoryItemModel _$BillHistoryItemModelFromJson(
   capIndex: (json['capIndex'] as num).toDouble(),
   capConsumption: (json['capConsumption'] as num).toDouble(),
   activeGenerationIndex: (json['activeGenerationIndex'] as num).toDouble(),
-  analyzerIds:
-      (json['analyzerIds'] as List<dynamic>?)?.map((e) => e as String).toList(),
+  analyzerIds: (json['analyzerIds'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
   pdfPath: json['pdfPath'] as String?,
 );
 

@@ -41,6 +41,13 @@ import '../data/datasources/remote_consumption_datasource.dart';
 import '../data/repositories/consumption_repository_impl.dart';
 import '../domain/repositories/i_consumption_repository.dart';
 
+// PRODUCTION CONSUMPTION
+import '../data/datasources/remote_production_consumption_datasource.dart';
+import '../data/repositories/production_consumption_repository_impl.dart';
+import '../domain/repositories/i_production_consumption_repository.dart';
+import '../application/home/get_daily_production_consumption_usecase.dart';
+import '../application/home/home_cubit.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -170,6 +177,30 @@ Future<void> init() async {
   // Repository
   sl.registerLazySingleton<IConsumptionRepository>(
     () => ConsumptionRepositoryImpl(sl()),
+  );
+
+  // ========= PRODUCTION CONSUMPTION =========
+
+  // Data source
+  sl.registerLazySingleton<RemoteProductionConsumptionDataSource>(
+    () => RemoteProductionConsumptionDataSourceImpl(sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<IProductionConsumptionRepository>(
+    () => ProductionConsumptionRepositoryImpl(sl()),
+  );
+
+  // Usecase
+  sl.registerLazySingleton<GetDailyProductionConsumptionUseCase>(
+    () => GetDailyProductionConsumptionUseCase(sl()),
+  );
+
+  // Cubit
+  sl.registerFactory<HomeCubit>(
+    () => HomeCubit(
+      getDailyProductionConsumptionUseCase: sl(),
+    ),
   );
 
   // ========= DİĞER MODÜLLER İÇİN YER =========
