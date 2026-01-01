@@ -10,12 +10,12 @@ TariffModel _$TariffModelFromJson(Map<String, dynamic> json) => TariffModel(
   originalTariffId: json['originalTariffId'] as String,
   effectiveFrom: json['effectiveFrom'] as String,
   currency: json['currency'] as String,
-  energyType: json['energyType'] as String,
-  distributionType: json['distributionType'] as String,
-  distributionSystemUser: json['distributionSystemUser'] as String,
-  priceType: json['priceType'] as String,
+  energyType: json['energy_type'] as String,
+  distributionType: json['distribution_type'] as String,
+  distributionSystemUser: json['distribution_system_user'] as String,
+  priceType: json['price_type'] as String,
   term: json['term'] as String,
-  supplyCompany: json['supplyCompany'] as String,
+  supplyCompany: json['supply_company'] as String,
   price: TariffPriceModel.fromJson(json['price'] as Map<String, dynamic>),
   isDefault: json['isDefault'] as bool,
 );
@@ -25,47 +25,47 @@ Map<String, dynamic> _$TariffModelToJson(TariffModel instance) =>
       'originalTariffId': instance.originalTariffId,
       'effectiveFrom': instance.effectiveFrom,
       'currency': instance.currency,
-      'energyType': instance.energyType,
-      'distributionType': instance.distributionType,
-      'distributionSystemUser': instance.distributionSystemUser,
-      'priceType': instance.priceType,
+      'energy_type': instance.energyType,
+      'distribution_type': instance.distributionType,
+      'distribution_system_user': instance.distributionSystemUser,
+      'price_type': instance.priceType,
       'term': instance.term,
-      'supplyCompany': instance.supplyCompany,
+      'supply_company': instance.supplyCompany,
       'price': instance.price,
       'isDefault': instance.isDefault,
     };
 
 TariffPriceModel _$TariffPriceModelFromJson(Map<String, dynamic> json) =>
     TariffPriceModel(
-      multiTimePrice: json['multiTimePrice'] == null
+      multiTimePrice: json['multi_time_price'] == null
           ? null
           : MultiTimePriceModel.fromJson(
-              json['multiTimePrice'] as Map<String, dynamic>,
+              json['multi_time_price'] as Map<String, dynamic>,
             ),
-      powerPrice: (json['powerPrice'] as num).toDouble(),
-      overusePrice: (json['overusePrice'] as num).toDouble(),
-      singleTimePrice: (json['singleTimePrice'] as num?)?.toDouble(),
-      reactivePowerPrice: (json['reactivePowerPrice'] as num).toDouble(),
-      distributionCost: (json['distributionCost'] as num).toDouble(),
-      greenEnergyPrice: (json['greenEnergyPrice'] as num?)?.toDouble(),
-      greenEnergyDistributionCost: (json['greenEnergyDistributionCost'] as num?)
-          ?.toDouble(),
-      vatRate: (json['vatRate'] as num).toDouble(),
-      otherTaxesRate: (json['otherTaxesRate'] as num).toDouble(),
+      powerPrice: (json['power_price'] as num).toDouble(),
+      overusePrice: (json['overuse_price'] as num).toDouble(),
+      singleTimePrice: (json['single_time_price'] as num?)?.toDouble(),
+      reactivePowerPrice: (json['reactive_power_price'] as num).toDouble(),
+      distributionCost: (json['distribution_cost'] as num).toDouble(),
+      greenEnergyPrice: (json['green_energy_price'] as num?)?.toDouble(),
+      greenEnergyDistributionCost:
+          (json['green_energy_distribution_cost'] as num?)?.toDouble(),
+      vatRate: (json['vatRate'] as num?)?.toDouble(),
+      otherTaxesRate: (json['otherTaxesRate'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$TariffPriceModelToJson(TariffPriceModel instance) =>
     <String, dynamic>{
-      'multiTimePrice': instance.multiTimePrice,
-      'powerPrice': instance.powerPrice,
-      'overusePrice': instance.overusePrice,
-      'singleTimePrice': instance.singleTimePrice,
-      'reactivePowerPrice': instance.reactivePowerPrice,
-      'distributionCost': instance.distributionCost,
-      'greenEnergyPrice': instance.greenEnergyPrice,
-      'greenEnergyDistributionCost': instance.greenEnergyDistributionCost,
-      'vatRate': instance.vatRate,
-      'otherTaxesRate': instance.otherTaxesRate,
+      'multi_time_price': instance.multiTimePrice,
+      'power_price': instance.powerPrice,
+      'overuse_price': instance.overusePrice,
+      'single_time_price': instance.singleTimePrice,
+      'reactive_power_price': instance.reactivePowerPrice,
+      'distribution_cost': instance.distributionCost,
+      'green_energy_price': instance.greenEnergyPrice,
+      'green_energy_distribution_cost': instance.greenEnergyDistributionCost,
+      'vatRate': ?instance.vatRate,
+      'otherTaxesRate': ?instance.otherTaxesRate,
     };
 
 MultiTimePriceModel _$MultiTimePriceModelFromJson(Map<String, dynamic> json) =>
@@ -82,15 +82,15 @@ Map<String, dynamic> _$MultiTimePriceModelToJson(
 BuildingModel _$BuildingModelFromJson(Map<String, dynamic> json) =>
     BuildingModel(
       id: json['_id'] as String,
-      companyId: json['companyId'] as String,
+      companyId: json['company_id'] as String,
       name: json['name'] as String,
       address: json['address'] as String,
       lat: (json['lat'] as num?)?.toDouble(),
       long: (json['long'] as num?)?.toDouble(),
       floors: (json['floors'] as num?)?.toInt(),
-      contactPersons: json['contactPersons'] as List<dynamic>,
-      personelCount: (json['personelCount'] as num?)?.toInt(),
-      totalArea: (json['totalArea'] as num?)?.toDouble(),
+      contactPersons: json['contact_persons'] as List<dynamic>? ?? [],
+      personelCount: (json['personel_count'] as num?)?.toInt(),
+      totalArea: (json['total_area'] as num?)?.toDouble(),
       tariff: json['tariff'] == null
           ? null
           : TariffModel.fromJson(json['tariff'] as Map<String, dynamic>),
@@ -102,30 +102,30 @@ BuildingModel _$BuildingModelFromJson(Map<String, dynamic> json) =>
       updatedAt: json['updatedAt'] == null
           ? null
           : DateTime.parse(json['updatedAt'] as String),
-      v: (json['v'] as num?)?.toInt(),
-      userInCharge: json['userInCharge'] as String?,
+      v: (json['__v'] as num?)?.toInt(),
+      userInCharge: json['user_in_charge'] as String?,
       billHistoryJson: json['billHistory'] as Map<String, dynamic>?,
     );
 
 Map<String, dynamic> _$BuildingModelToJson(BuildingModel instance) =>
     <String, dynamic>{
       '_id': instance.id,
-      'companyId': instance.companyId,
+      'company_id': instance.companyId,
       'name': instance.name,
       'address': instance.address,
       'lat': instance.lat,
       'long': instance.long,
       'floors': instance.floors,
-      'contactPersons': instance.contactPersons,
-      'personelCount': instance.personelCount,
-      'totalArea': instance.totalArea,
+      'contact_persons': instance.contactPersons,
+      'personel_count': instance.personelCount,
+      'total_area': instance.totalArea,
       'tariff': instance.tariff,
       'sector': instance.sector,
       'billCutoffDay': instance.billCutoffDay,
       'createdAt': instance.createdAt?.toIso8601String(),
       'updatedAt': instance.updatedAt?.toIso8601String(),
-      'v': instance.v,
-      'userInCharge': instance.userInCharge,
+      '__v': instance.v,
+      'user_in_charge': instance.userInCharge,
       'billHistory': instance.billHistoryJson,
     };
 

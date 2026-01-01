@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/router/app_router.dart';
 import 'injections/injection_container.dart' as di;
@@ -24,13 +25,16 @@ Future<void> main() async {
   // 1) Firebase'i başlat
   await Firebase.initializeApp();
 
-  // 2) FCM arka plan mesaj handler'ını kaydet
+  // 2) Türkçe locale'i başlat (DateFormat için gerekli)
+  await initializeDateFormatting('tr_TR', null);
+
+  // 3) FCM arka plan mesaj handler'ını kaydet
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // 3) Dependency Injection container'ı başlat (get_it)
+  // 4) Dependency Injection container'ı başlat (get_it)
   await di.init();
 
-  // 4) Uygulamayı çalıştır
+  // 5) Uygulamayı çalıştır
   runApp(const MyApp());
 }
 

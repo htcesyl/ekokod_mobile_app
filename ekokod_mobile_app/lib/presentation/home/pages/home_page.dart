@@ -3,10 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/app_themes.dart';
 import '../../../application/notification/notification_cubit.dart';
+import '../../../application/notification/notification_state.dart';
 import '../../../application/home/home_cubit.dart';
+import '../../../application/auth/auth_cubit.dart';
+import '../../../core/utils/jwt_utils.dart';
 import 'package:ekokod_mobile_app/presentation/shared_widgets/main_bottom_navbar.dart';
 import 'package:ekokod_mobile_app/presentation/shared_widgets/data_summary_card.dart';
 import 'package:ekokod_mobile_app/presentation/shared_widgets/app_bar.dart';
+import '../widgets/annual_consumption_chart.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,8 +24,23 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-    // TODO: Buraya gerçek login olmuş kullanıcının id'sini koyacaksın.
-    const testUserId = 'test-user-123';
+    // Login olmuş kullanıcının userId'sini al
+    final authState = context.read<AuthCubit>().state;
+    String? userId;
+    
+    if (authState is AuthAuthenticated) {
+      // JWT token'dan userId çıkar
+      userId = JwtUtils.getUserIdFromToken(authState.user.token);
+    }
+
+    // Eğer userId alınamazsa test userId kullan (fallback)
+    final finalUserId = userId ?? 'test-user-123';
+    
+    if (userId == null) {
+      print('⚠️ JWT token\'dan userId çıkarılamadı, test userId kullanılıyor');
+    } else {
+      print('✅ JWT token\'dan userId çıkarıldı: $userId');
+    }
 
     // Push notification sistemini başlat:
     // - Bildirim izni iste
@@ -29,7 +48,7 @@ class _HomePageState extends State<HomePage> {
     // - Token'ı backend'e kaydetmeye çalış
     // - Listener'ları kur
     context.read<NotificationCubit>().init(
-          userId: testUserId,
+          userId: finalUserId,
           platform: 'android',
         );
 
@@ -39,32 +58,46 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(gradient: secondBackgroundGradient),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
+    return BlocListener<NotificationCubit, NotificationState>(
+      listener: (context, state) {
+        // Hata durumunda kullanıcıya bildir
+        if (state.error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Bildirim ayarları hatası: ${state.error}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      },
+      child: Container(
+        decoration: const BoxDecoration(gradient: secondBackgroundGradient),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
 
-        appBar: const CustomAppBar(weatherData: '21°C'),
+          appBar: const CustomAppBar(weatherData: '21°C'),
 
-        bottomNavigationBar: const MainBottomNavBar(selectedIndex: 0),
+          bottomNavigationBar: const MainBottomNavBar(selectedIndex: 0),
 
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              _buildSummaryCards(context),
-              const SizedBox(height: 24),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                _buildSummaryCards(context),
+                const SizedBox(height: 24),
 
-              _buildElectricityConsumptionChart(context),
-              const SizedBox(height: 24),
+                _buildElectricityConsumptionChart(context),
+                const SizedBox(height: 24),
 
-              _buildLastMonthBillSummary(context),
-              const SizedBox(height: 24),
+                _buildLastMonthBillSummary(context),
+                const SizedBox(height: 24),
 
-              _buildDemandSummary(context),
-              const SizedBox(height: 24),
-            ],
+                _buildDemandSummary(context),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
       ),
@@ -118,12 +151,16 @@ class _HomePageState extends State<HomePage> {
             ],
           );
         } else if (state is HomeError) {
+          // Veri bulunamadı mesajı için özel durum
+          final isDataNotFound = state.message.contains('bulunmamaktadır') || 
+                                 state.message.contains('bulunamadı');
+          
           return Row(
             children: [
               Expanded(
                 child: DataSummaryCard(
                   title: 'Günlük Tüketim',
-                  value: 'Hata',
+                  value: isDataNotFound ? 'Veri Yok' : 'Hata',
                   isCurrency: false,
                 ),
               ),
@@ -131,7 +168,7 @@ class _HomePageState extends State<HomePage> {
               Expanded(
                 child: DataSummaryCard(
                   title: 'Günlük Üretim',
-                  value: 'Hata',
+                  value: isDataNotFound ? 'Veri Yok' : 'Hata',
                   isCurrency: false,
                 ),
               ),
@@ -228,12 +265,33 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           const SizedBox(height: 20),
-          Container(
-            height: 200,
-            color: Colors.grey[100],
-            child: const Center(
-              child: Text('Yıllık Tüketim Grafiği (API Verisi)'),
-            ),
+          BlocBuilder<HomeCubit, HomeState>(
+            builder: (context, state) {
+              if (state is HomeLoaded && state.annualConsumptionData != null) {
+                return AnnualConsumptionChart(
+                  data: state.annualConsumptionData,
+                );
+              } else if (state is HomeLoading) {
+                return Container(
+                  height: 280, // 200'den 280'e büyütüldü
+                  color: Colors.grey[100],
+                  child: const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              } else {
+                return Container(
+                  height: 280, // 200'den 280'e büyütüldü
+                  color: Colors.grey[100],
+                  child: const Center(
+                    child: Text(
+                      'Yıllık Tüketim Grafiği (Veri Yok)',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                );
+              }
+            },
           ),
         ],
       ),

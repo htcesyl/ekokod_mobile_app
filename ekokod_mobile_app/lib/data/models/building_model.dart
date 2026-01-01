@@ -65,10 +65,10 @@ class TariffPriceModel {
   final double? greenEnergyPrice;
   @JsonKey(name: 'green_energy_distribution_cost')
   final double? greenEnergyDistributionCost;
-  @JsonKey(name: 'vatRate')
-  final double vatRate;
-  @JsonKey(name: 'otherTaxesRate')
-  final double otherTaxesRate;
+  @JsonKey(name: 'vatRate', includeIfNull: false)
+  final double? vatRate;
+  @JsonKey(name: 'otherTaxesRate', includeIfNull: false)
+  final double? otherTaxesRate;
 
   TariffPriceModel({
     this.multiTimePrice,
@@ -79,8 +79,8 @@ class TariffPriceModel {
     required this.distributionCost,
     this.greenEnergyPrice,
     this.greenEnergyDistributionCost,
-    required this.vatRate,
-    required this.otherTaxesRate,
+    this.vatRate,
+    this.otherTaxesRate,
   });
 
   factory TariffPriceModel.fromJson(Map<String, dynamic> json) =>
@@ -118,6 +118,7 @@ class BuildingModel {
   final double? lat;
   final double? long;
   final int? floors;
+  @JsonKey(name: 'contact_persons', defaultValue: [])
   final List<dynamic> contactPersons;
   @JsonKey(name: 'personel_count')
   final int? personelCount;
@@ -148,7 +149,7 @@ class BuildingModel {
     this.lat,
     this.long,
     this.floors,
-    required this.contactPersons,
+    this.contactPersons = const [],
     this.personelCount,
     this.totalArea,
     this.tariff,

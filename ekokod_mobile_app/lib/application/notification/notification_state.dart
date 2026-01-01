@@ -6,25 +6,29 @@ class NotificationState extends Equatable {
   final bool isPermissionGranted;
   final bool isLoading;
   final List<NotificationEntity> notifications;
+  final String? error;
 
   const NotificationState({
     this.isPermissionGranted = false,
     this.isLoading = false,
     this.notifications = const [],
+    this.error,
   });
 
   NotificationState copyWith({
     bool? isPermissionGranted,
     bool? isLoading,
     List<NotificationEntity>? notifications,
+    String? error,
   }) {
     return NotificationState(
       isPermissionGranted: isPermissionGranted ?? this.isPermissionGranted,
       isLoading: isLoading ?? this.isLoading,
       notifications: notifications ?? this.notifications,
+      error: error,
     );
   }
 
   @override
-  List<Object?> get props => [isPermissionGranted, isLoading, notifications];
+  List<Object?> get props => [isPermissionGranted, isLoading, notifications, error];
 }

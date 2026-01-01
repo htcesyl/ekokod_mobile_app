@@ -54,9 +54,16 @@ class NotificationCubit extends Cubit<NotificationState> {
         platform: platform,
       );
       print('✅ Device token backend\'e kaydedildi.');
+      emit(state.copyWith(isPermissionGranted: true, isLoading: false, error: null));
     } catch (e) {
-      // Şimdilik sadece log, uygulamayı patlatmıyoruz
+      // Hata durumunu state'e kaydet
+      final errorMessage = e.toString();
       print('⚠️ Device token kaydedilirken hata oluştu: $e');
+      emit(state.copyWith(
+        isPermissionGranted: true,
+        isLoading: false,
+        error: errorMessage,
+      ));
     }
 
     // 4) Uygulama açıkken gelen mesajları dinle

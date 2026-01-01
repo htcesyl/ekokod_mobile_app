@@ -53,7 +53,18 @@ class RemoteProductionConsumptionDataSourceImpl
       ProductionConsumptionEndpoints.latest,
     );
 
-    return DailyProductionConsumptionModel.fromJson(json as Map<String, dynamic>);
+    print('📥 Production-consumption latest response:');
+    print('   Response: $json');
+    
+    // Backend'den gelen response'u kontrol et
+    final responseMap = json as Map<String, dynamic>;
+    
+    // Backend 'id' döndürüyor ama model '_id' bekliyor, düzelt
+    if (responseMap.containsKey('id') && !responseMap.containsKey('_id')) {
+      responseMap['_id'] = responseMap['id'];
+    }
+    
+    return DailyProductionConsumptionModel.fromJson(responseMap);
   }
 
   @override

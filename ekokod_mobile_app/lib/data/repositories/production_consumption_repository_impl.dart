@@ -33,8 +33,15 @@ class ProductionConsumptionRepositoryImpl
       final model = await remoteDataSource.getLatestProductionConsumption();
       return model.toEntity();
     } catch (e) {
-      // Hata durumunda null döndür (veya exception fırlatılabilir)
-      return null;
+      // 404 hatası = veri bulunamadı, bu normal bir durum
+      final errorMessage = e.toString();
+      if (errorMessage.contains('404') || errorMessage.contains('Not Found')) {
+        print('ℹ️ Production-consumption verisi bulunamadı (404). Bu normal bir durum.');
+        return null; // Veri yok, null döndür
+      }
+      // Diğer hatalar için exception fırlat
+      print('❌ Production-consumption verisi çekilirken hata: $e');
+      rethrow;
     }
   }
 

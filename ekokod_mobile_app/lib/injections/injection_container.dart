@@ -200,6 +200,9 @@ Future<void> init() async {
   sl.registerFactory<HomeCubit>(
     () => HomeCubit(
       getDailyProductionConsumptionUseCase: sl(),
+      buildingRepository: sl(),
+      analyzerRepository: sl(),
+      consumptionRepository: sl(),
     ),
   );
 

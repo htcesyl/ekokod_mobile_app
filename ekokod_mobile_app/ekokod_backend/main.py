@@ -1,4 +1,3 @@
-
 import os
 from datetime import datetime, timedelta
 
@@ -28,11 +27,19 @@ db = client[DB_NAME]
 users_collection = db["users"]
 alarms_collection = db["alarms"]
 production_consumption_collection = db["production_consumption"]
+device_tokens_collection = db["device_tokens"]
 
 app = FastAPI(
     title="Ekokod Backend API",
     version="1.0.0"
 )
+
+# Debug: Backend dosyasının yüklendiğini kontrol et
+print("=" * 50)
+print("🔔 Backend main.py dosyası yüklendi!")
+print(f"📁 Çalışma dizini: {os.getcwd()}")
+print(f"📄 Dosya yolu: {__file__}")
+print("=" * 50)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],   
@@ -72,6 +79,22 @@ class ProductionConsumptionResponse(BaseModel):
     analyzerId: str | None = None
     createdAt: str | None = None
     updatedAt: str | None = None
+
+
+class DeviceTokenRequest(BaseModel):
+    userId: str
+    fcmToken: str
+    platform: str  # "android" veya "ios" (save için zorunlu)
+
+
+class DeviceTokenDeleteRequest(BaseModel):
+    userId: str
+    fcmToken: str
+
+
+class DeviceTokenResponse(BaseModel):
+    success: bool
+    message: str
 
 
 # ---- Helper Functions ----
@@ -127,6 +150,19 @@ def serialize_production_consumption(doc: Any) -> Any:
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
+
+
+@app.get("/api/v1/debug/routes")
+async def debug_routes():
+    """Tüm yüklü route'ları listeler (debug için)"""
+    routes = []
+    for route in app.routes:
+        if hasattr(route, 'methods') and hasattr(route, 'path'):
+            routes.append({
+                "path": route.path,
+                "methods": list(route.methods) if route.methods else []
+            })
+    return {"routes": routes}
 
 
 @app.post("/api/v1/auth/login", response_model=LoginResponse)
@@ -379,3 +415,84 @@ async def create_production_consumption(req: ProductionConsumptionRequest):
                 detail="MongoDB izin hatası: Kullanıcının 'insert' işlemi yapma yetkisi yok."
             )
         raise HTTPException(status_code=500, detail=f"Veri eklenirken hata oluştu: {error_msg}")
+
+
+# ---- Device Token Routes ----
+
+# Debug: Bu endpoint'in yüklendiğini kontrol et
+print("=" * 50)
+print("🔔 Device Token endpoint'leri yükleniyor...")
+print("=" * 50)
+
+@app.post("/api/v1/notifications/device/save", response_model=DeviceTokenResponse)
+async def save_device_token(req: DeviceTokenRequest):
+    """
+    FCM device token'ı kaydeder veya günceller.
+    """
+    try:
+        # Mevcut token'ı kontrol et
+        existing = device_tokens_collection.find_one({
+            "userId": req.userId,
+            "fcmToken": req.fcmToken
+        })
+        
+        if existing:
+            # Token zaten varsa güncelle
+            device_tokens_collection.update_one(
+                {"userId": req.userId, "fcmToken": req.fcmToken},
+                {
+                    "$set": {
+                        "platform": req.platform,
+                        "updatedAt": datetime.utcnow()
+                    }
+                }
+            )
+            return DeviceTokenResponse(success=True, message="Token güncellendi.")
+        else:
+            # Yeni token ekle
+            doc = {
+                "userId": req.userId,
+                "fcmToken": req.fcmToken,
+                "platform": req.platform,
+                "createdAt": datetime.utcnow(),
+                "updatedAt": datetime.utcnow()
+            }
+            device_tokens_collection.insert_one(doc)
+            return DeviceTokenResponse(success=True, message="Token kaydedildi.")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_msg = str(e)
+        if "not allowed" in error_msg or "AtlasError" in error_msg:
+            raise HTTPException(
+                status_code=500,
+                detail="MongoDB izin hatası: Kullanıcının 'insert' veya 'update' işlemi yapma yetkisi yok."
+            )
+        raise HTTPException(status_code=500, detail=f"Token kaydedilirken hata oluştu: {error_msg}")
+
+
+@app.post("/api/v1/notifications/device/delete", response_model=DeviceTokenResponse)
+async def delete_device_token(req: DeviceTokenDeleteRequest):
+    """
+    FCM device token'ı siler.
+    """
+    try:
+        result = device_tokens_collection.delete_one({
+            "userId": req.userId,
+            "fcmToken": req.fcmToken
+        })
+        
+        if result.deleted_count > 0:
+            return DeviceTokenResponse(success=True, message="Token silindi.")
+        else:
+            return DeviceTokenResponse(success=False, message="Token bulunamadı.")
+            
+    except Exception as e:
+        error_msg = str(e)
+        if "not allowed" in error_msg or "AtlasError" in error_msg:
+            raise HTTPException(
+                status_code=500,
+                detail="MongoDB izin hatası: Kullanıcının 'delete' işlemi yapma yetkisi yok."
+            )
+        raise HTTPException(status_code=500, detail=f"Token silinirken hata oluştu: {error_msg}")

@@ -20,11 +20,15 @@ class HomeLoading extends HomeState {
 
 class HomeLoaded extends HomeState {
   final DailyProductionConsumptionEntity data;
+  final List<ChartPointEntity>? annualConsumptionData; // Yıllık tüketim verileri
 
-  const HomeLoaded({required this.data});
+  const HomeLoaded({
+    required this.data,
+    this.annualConsumptionData,
+  });
 
   @override
-  List<Object?> get props => [data];
+  List<Object?> get props => [data, annualConsumptionData];
 }
 
 class HomeError extends HomeState {
