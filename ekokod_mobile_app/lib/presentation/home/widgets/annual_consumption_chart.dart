@@ -42,7 +42,8 @@ class AnnualConsumptionChart extends StatelessWidget {
           // Önce grafiği çiz
           BarChart(
             BarChartData(
-              alignment: BarChartAlignment.spaceBetween, // Bar'lar arası boşluk için
+              alignment: BarChartAlignment.start, // Start alignment (daha kontrollü)
+              groupsSpace: 8, // Bar'lar arası sabit boşluk (8px)
               maxY: maxY,
               barTouchData: BarTouchData(
             enabled: true,
@@ -166,6 +167,7 @@ class AnnualConsumptionChart extends StatelessWidget {
                 dataLength: data!.length,
                 lineColor: Colors.grey[300]!,
                 barWidth: 26.0, // Bar genişliği (BarChartRodData width ile aynı)
+                groupsSpace: 8.0, // Bar'lar arası boşluk (BarChartData.groupsSpace ile aynı)
               ),
             ),
           ),
@@ -180,11 +182,13 @@ class _VerticalLinePainter extends CustomPainter {
   final int dataLength;
   final Color lineColor;
   final double barWidth;
+  final double groupsSpace; // Bar'lar arası boşluk (BarChartData.groupsSpace ile aynı)
 
   _VerticalLinePainter({
     required this.dataLength,
     required this.lineColor,
     required this.barWidth,
+    required this.groupsSpace,
   });
 
   @override
@@ -194,15 +198,13 @@ class _VerticalLinePainter extends CustomPainter {
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
-    // Bar genişliği ve aralığı hesapla (spaceBetween alignment için)
-    final chartWidth = size.width;
-    final totalSpace = chartWidth / dataLength; // Her bar için toplam alan
-    final spacing = totalSpace - barWidth; // Bar'lar arası boşluk
+    // Start alignment için: Her bar'ın pozisyonu = index * (barWidth + groupsSpace)
+    // İlk bar 0'dan başlar, sonraki bar'lar (barWidth + groupsSpace) kadar ilerler
     
     // Her bar'ın SAĞ KENARINDAN (bitiş noktasından) çizgi çiz
     for (int i = 0; i < dataLength - 1; i++) {
-      // Bar'ın başlangıç pozisyonu
-      final barStartX = i * totalSpace + spacing / 2;
+      // Bar'ın başlangıç pozisyonu (start alignment)
+      final barStartX = i * (barWidth + groupsSpace);
       // Bar'ın bitiş pozisyonu (sağ kenarı)
       final barEndX = barStartX + barWidth;
       

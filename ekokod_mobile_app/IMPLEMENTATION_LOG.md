@@ -1048,3 +1048,1152 @@ Widget _buildSummaryCards(BuildContext context) {
 
 **Son Güncelleme:** 2025-12-14  
 **Durum:** ✅ TAMAMLANDI
+
+---
+
+## 📊 YILLIK TÜKETİM GRAFİĞİ İMPLEMENTASYONU
+
+**Tarih:** 2025-12-31  
+**Durum:** ✅ TAMAMLANDI
+
+### 🎯 Amaç
+Anasayfada yıllık tüketim verilerini görselleştirmek için bar chart grafiği oluşturmak. Son 12 ayın aylık tüketim verilerini çubuk grafik olarak göstermek.
+
+---
+
+## 🔄 BACKEND ENDPOINT EKLEMELERİ
+
+### ✅ ADIM 23: GET /api/v1/building Endpoint Eklendi
+**Tarih:** 2025-12-31  
+**Dosya:** `ekokod_backend/main.py`  
+**Durum:** ✅ DOSYA GÜNCELLENDİ
+
+**Eklenen Kod:**
+```python
+class BuildingResponse(BaseModel):
+    buildings: List[Dict[str, Any]]
+
+@app.get("/api/v1/building", response_model=BuildingResponse)
+async def get_buildings():
+    """
+    Tüm binaları getirir.
+    """
+    try:
+        buildings = list(buildings_collection.find({}))
+        
+        # Serialize işlemi
+        serialized_buildings = []
+        for building in buildings:
+            serialized = {}
+            for key, value in building.items():
+                if key == "_id":
+                    serialized["id"] = str(value)
+                elif isinstance(value, ObjectId):
+                    serialized[key] = str(value)
+                elif isinstance(value, datetime):
+                    serialized[key] = value.isoformat()
+                else:
+                    serialized[key] = value
+            
+            # contact_persons null kontrolü
+            if "contact_persons" not in serialized or serialized["contact_persons"] is None:
+                serialized["contact_persons"] = []
+            
+            serialized_buildings.append(serialized)
+        
+        return {"buildings": serialized_buildings}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+```
+
+**Yapılanlar:**
+- ✅ MongoDB `buildings` collection'ından tüm binaları çekiyor
+- ✅ ObjectId ve datetime serialize işlemleri yapılıyor
+- ✅ `contact_persons` null kontrolü eklendi (boş liste döndürüyor)
+- ✅ Response model ile tip güvenliği sağlandı
+
+**Kullanım Amacı:**
+- Kullanıcının hangi binaya ait analizörleri olduğunu bulmak için
+- Building ID'lerini almak için
+
+---
+
+### ✅ ADIM 24: GET /api/v1/analyzer Endpoint Eklendi
+**Tarih:** 2025-12-31  
+**Dosya:** `ekokod_backend/main.py`  
+**Durum:** ✅ DOSYA GÜNCELLENDİ
+
+**Eklenen Kod:**
+```python
+@app.get("/api/v1/analyzer")
+async def get_analyzers(buildingId: str = Query(..., description="Building ID")):
+    """
+    Belirli bir binaya ait analizörleri getirir.
+    """
+    try:
+        analyzers = list(analyzers_collection.find({"buildingId": buildingId}))
+        
+        # Serialize işlemi
+        serialized_analyzers = []
+        for analyzer in analyzers:
+            serialized = {}
+            for key, value in analyzer.items():
+                if key == "_id":
+                    serialized["id"] = str(value)
+                elif isinstance(value, ObjectId):
+                    serialized[key] = str(value)
+                elif isinstance(value, datetime):
+                    serialized[key] = value.isoformat()
+                else:
+                    serialized[key] = value
+            serialized_analyzers.append(serialized)
+        
+        return {"analyzers": serialized_analyzers}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+```
+
+**Yapılanlar:**
+- ✅ `buildingId` query parametresi ile filtreleme yapılıyor
+- ✅ MongoDB `analyzers` collection'ından veri çekiliyor
+- ✅ ObjectId ve datetime serialize işlemleri yapılıyor
+
+**Kullanım Amacı:**
+- Bir binaya ait analizörleri bulmak için
+- Analizör ID'lerini almak için (consumption verisi çekmek için gerekli)
+
+---
+
+### ✅ ADIM 25: GET /api/v1/consumption Endpoint Eklendi
+**Tarih:** 2025-12-31  
+**Dosya:** `ekokod_backend/main.py`  
+**Durum:** ✅ DOSYA GÜNCELLENDİ
+
+**Eklenen Kod:**
+```python
+@app.get("/api/v1/consumption")
+async def get_consumptions(
+    analyzer_id: str = Query(None, description="Tek analizör ID"),
+    analyzer_ids: str = Query(None, description="Virgülle ayrılmış analizör ID'leri"),
+    period: str = Query("daily", description="Period: daily, monthly, yearly"),
+    start_date: str = Query(None, description="Başlangıç tarihi (YYYY-MM-DD)"),
+    end_date: str = Query(None, description="Bitiş tarihi (YYYY-MM-DD)"),
+    page: int = Query(1, ge=1),
+    limit: int = Query(100, ge=1, le=1000),
+):
+    """
+    Tüketim verilerini getirir.
+    """
+    try:
+        # Query oluştur
+        query = {}
+        
+        # Analyzer ID filtreleme
+        if analyzer_ids:
+            analyzer_id_list = [aid.strip() for aid in analyzer_ids.split(",")]
+            query["analyzerId"] = {"$in": analyzer_id_list}
+        elif analyzer_id:
+            query["analyzerId"] = analyzer_id
+        
+        # Tarih filtreleme
+        if start_date and end_date:
+            start = datetime.strptime(start_date, "%Y-%m-%d")
+            end = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
+            query["date"] = {"$gte": start, "$lt": end}
+        
+        # Period label formatı
+        period_format = {
+            "daily": "%d/%m/%Y",
+            "monthly": "%m/%Y",
+            "yearly": "%Y"
+        }
+        
+        # MongoDB'den veri çek
+        skip = (page - 1) * limit
+        consumptions = list(
+            consumption_collection.find(query)
+            .sort("date", 1)
+            .skip(skip)
+            .limit(limit)
+        )
+        
+        # Serialize işlemi
+        serialized_consumptions = []
+        for consumption in consumptions:
+            serialized = {}
+            for key, value in consumption.items():
+                if key == "_id":
+                    serialized["id"] = str(value)
+                elif isinstance(value, ObjectId):
+                    serialized[key] = str(value)
+                elif isinstance(value, datetime):
+                    serialized[key] = value.isoformat()
+                    # Period label oluştur
+                    if key == "date":
+                        serialized["periodLabel"] = value.strftime(period_format.get(period, "%d/%m/%Y"))
+                else:
+                    serialized[key] = value
+            serialized_consumptions.append(serialized)
+        
+        return {
+            "consumptions": serialized_consumptions,
+            "page": page,
+            "limit": limit,
+            "total": len(serialized_consumptions)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+```
+
+**Yapılanlar:**
+- ✅ Tek veya çoklu `analyzer_id` desteği (virgülle ayrılmış)
+- ✅ `period` parametresi ile period label formatı belirleniyor (daily, monthly, yearly)
+- ✅ Tarih aralığı filtreleme (`start_date`, `end_date`)
+- ✅ Pagination desteği (`page`, `limit`)
+- ✅ MongoDB `consumption` collection'ından veri çekiliyor
+- ✅ Period label otomatik oluşturuluyor (tarihe göre)
+
+**Kullanım Amacı:**
+- Son 12 ayın aylık tüketim verilerini çekmek için
+- Birden fazla analizörün verilerini birleştirmek için
+
+---
+
+## 🔄 MOBILE APP KATMANLARI
+
+### ✅ ADIM 26: Building Entity ve Model Oluşturuldu
+**Tarih:** 2025-12-31  
+**Dosyalar:**
+- `lib/domain/entities/building_entity.dart` ✅ YENİ DOSYA
+- `lib/data/models/building_model.dart` ✅ GÜNCELLENDİ
+
+**BuildingEntity İçeriği:**
+```dart
+class BuildingEntity {
+  final String id;
+  final String name;
+  final String? address;
+  final String? buildingId;  // MongoDB'deki _id
+  final List<String> contactPersons;
+  // ... diğer alanlar
+}
+```
+
+**BuildingModel Değişiklikleri:**
+```dart
+@JsonSerializable()
+class BuildingModel {
+  @JsonKey(name: 'contact_persons', defaultValue: [])
+  final List<String> contactPersons;  // ✅ Null safety için defaultValue eklendi
+  
+  // Constructor'da default değer
+  BuildingModel({
+    // ...
+    this.contactPersons = const [],
+  });
+}
+```
+
+**Yapılanlar:**
+- ✅ `contactPersons` için null safety eklendi (`@JsonKey` ile `defaultValue: []`)
+- ✅ Constructor'da default boş liste eklendi
+- ✅ `build_runner` ile `.g.dart` dosyası güncellendi
+
+---
+
+### ✅ ADIM 27: Analyzer Entity ve Model Oluşturuldu
+**Tarih:** 2025-12-31  
+**Dosyalar:**
+- `lib/domain/entities/analyzer_entity.dart` ✅ YENİ DOSYA
+- `lib/data/models/analyzer_model.dart` ✅ YENİ DOSYA
+
+**AnalyzerEntity İçeriği:**
+```dart
+class AnalyzerEntity {
+  final String id;
+  final String name;
+  final String buildingId;
+  final String? serialNumber;
+  // ... diğer alanlar
+}
+```
+
+**Yapılanlar:**
+- ✅ Analyzer bilgilerini tutmak için entity ve model oluşturuldu
+- ✅ `buildingId` ile building'e bağlantı kuruldu
+
+---
+
+### ✅ ADIM 28: Chart Entity Oluşturuldu
+**Tarih:** 2025-12-31  
+**Dosya:** `lib/domain/entities/chart_entity.dart` ✅ YENİ DOSYA
+
+**ChartEntity İçeriği:**
+```dart
+class ChartPointEntity {
+  final DateTime timestamp;
+  final double value;
+  
+  const ChartPointEntity({
+    required this.timestamp,
+    required this.value,
+  });
+}
+```
+
+**Yapılanlar:**
+- ✅ Grafik için basit entity oluşturuldu
+- ✅ Timestamp ve value alanları var
+- ✅ fl_chart kütüphanesi ile uyumlu
+
+---
+
+### ✅ ADIM 29: Building Repository Katmanları Oluşturuldu
+**Tarih:** 2025-12-31  
+**Dosyalar:**
+- `lib/data/datasources/remote_building_datasource.dart` ✅ YENİ DOSYA
+- `lib/domain/repositories/i_building_repository.dart` ✅ YENİ DOSYA
+- `lib/data/repositories/building_repository_impl.dart` ✅ YENİ DOSYA
+
+**RemoteBuildingDataSource İçeriği:**
+```dart
+abstract class RemoteBuildingDataSource {
+  Future<BuildingResponseModel> getBuildings();
+}
+
+class RemoteBuildingDataSourceImpl implements RemoteBuildingDataSource {
+  final HttpClient httpClient;
+  
+  @override
+  Future<BuildingResponseModel> getBuildings() async {
+    final response = await httpClient.get('/api/v1/building');
+    return BuildingResponseModel.fromJson(response);
+  }
+}
+```
+
+**Yapılanlar:**
+- ✅ Backend `/api/v1/building` endpoint'ini çağırıyor
+- ✅ Model dönüşümü yapılıyor
+- ✅ Repository pattern uygulandı
+
+---
+
+### ✅ ADIM 30: Analyzer Repository Katmanları Oluşturuldu
+**Tarih:** 2025-12-31  
+**Dosyalar:**
+- `lib/data/datasources/remote_analyzer_datasource.dart` ✅ YENİ DOSYA
+- `lib/domain/repositories/i_analyzer_repository.dart` ✅ YENİ DOSYA
+- `lib/data/repositories/analyzer_repository_impl.dart` ✅ YENİ DOSYA
+
+**RemoteAnalyzerDataSource İçeriği:**
+```dart
+abstract class RemoteAnalyzerDataSource {
+  Future<AnalyzerResponseModel> getAnalyzers({required String buildingId});
+}
+
+class RemoteAnalyzerDataSourceImpl implements RemoteAnalyzerDataSource {
+  final HttpClient httpClient;
+  
+  @override
+  Future<AnalyzerResponseModel> getAnalyzers({required String buildingId}) async {
+    final response = await httpClient.get(
+      '/api/v1/analyzer',
+      queryParameters: {'buildingId': buildingId},
+    );
+    return AnalyzerResponseModel.fromJson(response);
+  }
+}
+```
+
+**Yapılanlar:**
+- ✅ Backend `/api/v1/analyzer` endpoint'ini çağırıyor
+- ✅ `buildingId` query parametresi ile filtreleme yapılıyor
+- ✅ Repository pattern uygulandı
+
+---
+
+### ✅ ADIM 31: Consumption Repository Katmanları Oluşturuldu
+**Tarih:** 2025-12-31  
+**Dosyalar:**
+- `lib/data/datasources/remote_consumption_datasource.dart` ✅ YENİ DOSYA
+- `lib/domain/repositories/i_consumption_repository.dart` ✅ YENİ DOSYA
+- `lib/data/repositories/consumption_repository_impl.dart` ✅ YENİ DOSYA
+
+**RemoteConsumptionDataSource İçeriği:**
+```dart
+abstract class RemoteConsumptionDataSource {
+  Future<List<ConsumptionEntity>> getConsumptions({
+    String? analyzerId,
+    List<String>? analyzerIds,
+    String period = 'daily',
+    DateTime? startDate,
+    DateTime? endDate,
+    int page = 1,
+    int limit = 100,
+  });
+}
+
+class RemoteConsumptionDataSourceImpl implements RemoteConsumptionDataSource {
+  final HttpClient httpClient;
+  
+  @override
+  Future<List<ConsumptionEntity>> getConsumptions({
+    String? analyzerId,
+    List<String>? analyzerIds,
+    String period = 'daily',
+    DateTime? startDate,
+    DateTime? endDate,
+    int page = 1,
+    int limit = 100,
+  }) async {
+    final queryParams = <String, dynamic>{};
+    
+    if (analyzerIds != null && analyzerIds.isNotEmpty) {
+      queryParams['analyzer_ids'] = analyzerIds.join(',');
+    } else if (analyzerId != null) {
+      queryParams['analyzer_id'] = analyzerId;
+    }
+    
+    queryParams['period'] = period;
+    
+    if (startDate != null && endDate != null) {
+      queryParams['start_date'] = DateFormat('yyyy-MM-dd').format(startDate);
+      queryParams['end_date'] = DateFormat('yyyy-MM-dd').format(endDate);
+    }
+    
+    queryParams['page'] = page.toString();
+    queryParams['limit'] = limit.toString();
+    
+    final response = await httpClient.get(
+      '/api/v1/consumption',
+      queryParameters: queryParams,
+    );
+    
+    final consumptionResponse = ConsumptionResponseModel.fromJson(response);
+    return consumptionResponse.consumptions.map((m) => m.toEntity()).toList();
+  }
+}
+```
+
+**Yapılanlar:**
+- ✅ Backend `/api/v1/consumption` endpoint'ini çağırıyor
+- ✅ Çoklu query parametresi desteği (analyzer_ids, period, tarih aralığı, pagination)
+- ✅ Model'den Entity'ye dönüşüm yapılıyor
+- ✅ Repository pattern uygulandı
+
+---
+
+### ✅ ADIM 32: HomeCubit'e Yıllık Tüketim Verisi Çekme Eklendi
+**Tarih:** 2025-12-31  
+**Dosya:** `lib/application/home/home_cubit.dart` ✅ DOSYA GÜNCELLENDİ
+
+**Eklenen Kod:**
+```dart
+class HomeCubit extends Cubit<HomeState> {
+  final GetDailyProductionConsumptionUseCase getDailyProductionConsumptionUseCase;
+  final IBuildingRepository buildingRepository;  // ✅ EKLENDİ
+  final IAnalyzerRepository analyzerRepository;  // ✅ EKLENDİ
+  final IConsumptionRepository consumptionRepository;  // ✅ EKLENDİ
+
+  HomeCubit({
+    required this.getDailyProductionConsumptionUseCase,
+    required this.buildingRepository,  // ✅ EKLENDİ
+    required this.analyzerRepository,  // ✅ EKLENDİ
+    required this.consumptionRepository,  // ✅ EKLENDİ
+  }) : super(const HomeInitial());
+
+  // ... mevcut metodlar ...
+
+  Future<void> loadLatestProductionConsumption() async {
+    emit(const HomeLoading());
+    try {
+      final data = await getDailyProductionConsumptionUseCase.getLatest();
+      if (data != null) {
+        emit(HomeLoaded(
+          latestProductionConsumptionData: data,
+          annualConsumptionData: null,  // İlk başta null
+        ));
+        
+        // ✅ Yıllık tüketim verilerini paralel olarak çek
+        await _loadAnnualConsumptionData(buildingId: data.buildingId);
+      } else {
+        emit(const HomeError(message: 'Henüz üretim-tüketim verisi bulunmamaktadır'));
+      }
+    } catch (e) {
+      // Hata yönetimi...
+    }
+  }
+
+  // ✅ YENİ METOD
+  Future<List<ChartPointEntity>?> _loadAnnualConsumptionData({String? buildingId}) async {
+    try {
+      print('📊 Yıllık tüketim verileri çekiliyor...');
+      
+      String? targetBuildingId = buildingId;
+      
+      // Eğer buildingId yoksa, tüm binaları kontrol et
+      if (targetBuildingId == null) {
+        final buildings = await buildingRepository.getBuildings();
+        if (buildings.isEmpty) {
+          print('❌ Bina bulunamadı');
+          return null;
+        }
+        
+        // İlk binayı dene
+        for (final building in buildings) {
+          final analyzers = await analyzerRepository.getAnalyzers(buildingId: building.id);
+          if (analyzers.isNotEmpty) {
+            targetBuildingId = building.id;
+            break;
+          }
+        }
+      }
+      
+      if (targetBuildingId == null) {
+        print('❌ Analizör bulunan bina bulunamadı');
+        return null;
+      }
+      
+      // Analizörleri çek
+      final analyzers = await analyzerRepository.getAnalyzers(buildingId: targetBuildingId);
+      if (analyzers.isEmpty) {
+        print('❌ Binada analizör bulunamadı');
+        return null;
+      }
+      
+      print('✅ ${analyzers.length} adet analizör bulundu');
+      
+      // Son 12 ayın tarih aralığını hesapla
+      final now = DateTime.now();
+      final startDate = DateTime(now.year - 1, now.month, 1);
+      final endDate = DateTime(now.year, now.month + 1, 0);
+      
+      print('📅 Tarih aralığı: ${DateFormat('yyyy-MM-dd').format(startDate)} - ${DateFormat('yyyy-MM-dd').format(endDate)}');
+      
+      // Analizör ID'lerini topla
+      final analyzerIds = analyzers.map((a) => a.id).toList();
+      
+      // Aylık tüketim verilerini çek
+      final consumptions = await consumptionRepository.getConsumptions(
+        analyzerIds: analyzerIds,
+        period: 'monthly',
+        startDate: startDate,
+        endDate: endDate,
+      );
+      
+      if (consumptions.isEmpty) {
+        print('❌ Tüketim verisi bulunamadı');
+        return null;
+      }
+      
+      // Aylara göre grupla ve topla (birden fazla analizör varsa)
+      final Map<String, double> monthlyData = {};
+      for (final consumption in consumptions) {
+        final monthKey = _extractMonthKey(consumption.timestamp);
+        monthlyData[monthKey] = (monthlyData[monthKey] ?? 0) + consumption.activeConsumption;
+      }
+      
+      // ChartPointEntity listesine çevir
+      final chartData = monthlyData.entries.map((entry) {
+        final date = DateTime.parse(entry.key);
+        return ChartPointEntity(
+          timestamp: date,
+          value: entry.value,
+        );
+      }).toList()
+        ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      
+      print('✅ ${chartData.length} ay verisi hazırlandı');
+      
+      // State'i güncelle
+      final currentState = state;
+      if (currentState is HomeLoaded) {
+        emit(currentState.copyWith(annualConsumptionData: chartData));
+      }
+      
+      return chartData;
+    } catch (e) {
+      print('❌ Yıllık tüketim verileri çekilirken hata: $e');
+      return null;
+    }
+  }
+
+  // ✅ HELPER METOD
+  String _extractMonthKey(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-01';
+  }
+}
+```
+
+**HomeState Güncellemesi:**
+```dart
+class HomeLoaded extends HomeState {
+  final DailyProductionConsumptionEntity? latestProductionConsumptionData;
+  final List<ChartPointEntity>? annualConsumptionData;  // ✅ EKLENDİ
+  
+  const HomeLoaded({
+    this.latestProductionConsumptionData,
+    this.annualConsumptionData,  // ✅ EKLENDİ
+  });
+  
+  HomeLoaded copyWith({
+    DailyProductionConsumptionEntity? latestProductionConsumptionData,
+    List<ChartPointEntity>? annualConsumptionData,  // ✅ EKLENDİ
+  }) {
+    return HomeLoaded(
+      latestProductionConsumptionData: latestProductionConsumptionData ?? this.latestProductionConsumptionData,
+      annualConsumptionData: annualConsumptionData ?? this.annualConsumptionData,  // ✅ EKLENDİ
+    );
+  }
+}
+```
+
+**Yapılanlar:**
+- ✅ `IBuildingRepository`, `IAnalyzerRepository`, `IConsumptionRepository` inject edildi
+- ✅ `_loadAnnualConsumptionData` metodu eklendi:
+  - Building ID yoksa tüm binaları kontrol ediyor
+  - İlk analizör bulunan binayı kullanıyor
+  - Son 12 ayın aylık tüketim verilerini çekiyor
+  - Birden fazla analizör varsa verileri aylara göre topluyor
+  - `ChartPointEntity` listesine çeviriyor
+- ✅ `HomeState`'e `annualConsumptionData` alanı eklendi
+- ✅ State güncellemesi yapılıyor
+
+---
+
+### ✅ ADIM 33: Dependency Injection Güncellendi
+**Tarih:** 2025-12-31  
+**Dosya:** `lib/injections/injection_container.dart` ✅ DOSYA GÜNCELLENDİ
+
+**Eklenen Kayıtlar:**
+```dart
+// ========= BUILDING =========
+sl.registerLazySingleton<RemoteBuildingDataSource>(
+  () => RemoteBuildingDataSourceImpl(sl()),
+);
+
+sl.registerLazySingleton<IBuildingRepository>(
+  () => BuildingRepositoryImpl(sl()),
+);
+
+// ========= ANALYZER =========
+sl.registerLazySingleton<RemoteAnalyzerDataSource>(
+  () => RemoteAnalyzerDataSourceImpl(sl()),
+);
+
+sl.registerLazySingleton<IAnalyzerRepository>(
+  () => AnalyzerRepositoryImpl(sl()),
+);
+
+// ========= CONSUMPTION =========
+sl.registerLazySingleton<RemoteConsumptionDataSource>(
+  () => RemoteConsumptionDataSourceImpl(sl()),
+);
+
+sl.registerLazySingleton<IConsumptionRepository>(
+  () => ConsumptionRepositoryImpl(sl()),
+);
+
+// ========= HOME CUBIT GÜNCELLEMESİ =========
+sl.registerFactory<HomeCubit>(
+  () => HomeCubit(
+    getDailyProductionConsumptionUseCase: sl(),
+    buildingRepository: sl(),  // ✅ EKLENDİ
+    analyzerRepository: sl(),  // ✅ EKLENDİ
+    consumptionRepository: sl(),  // ✅ EKLENDİ
+  ),
+);
+```
+
+**Yapılanlar:**
+- ✅ Building, Analyzer, Consumption repository'leri kaydedildi
+- ✅ HomeCubit factory'si güncellendi (yeni repository'ler inject edildi)
+
+---
+
+### ✅ ADIM 34: AnnualConsumptionChart Widget Oluşturuldu
+**Tarih:** 2025-12-31  
+**Dosya:** `lib/presentation/home/widgets/annual_consumption_chart.dart` ✅ YENİ DOSYA
+
+**Widget İçeriği:**
+```dart
+class AnnualConsumptionChart extends StatelessWidget {
+  final List<ChartPointEntity>? data;
+
+  @override
+  Widget build(BuildContext context) {
+    if (data == null || data!.isEmpty) {
+      return Container(
+        height: 280,
+        color: Colors.grey[100],
+        child: const Center(
+          child: Text('Yıllık Tüketim Grafiği (Veri Yok)'),
+        ),
+      );
+    }
+
+    // En yüksek değeri bul
+    final maxValue = data!.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+    final maxY = (maxValue * 1.15).ceilToDouble(); // %15 padding
+
+    return Container(
+      height: 280,
+      padding: const EdgeInsets.only(left: 4, right: 16, top: 16, bottom: 8),
+      child: Stack(
+        children: [
+          // Grafik
+          BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceBetween,
+              maxY: maxY,
+              barTouchData: BarTouchData(
+                enabled: true,
+                touchTooltipData: BarTouchTooltipData(
+                  getTooltipColor: (group) => AppColors.webColor,
+                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                    final monthName = DateFormat('MMM', 'tr_TR').format(data![groupIndex].timestamp);
+                    final value = rod.toY.toStringAsFixed(2);
+                    return BarTooltipItem('$monthName\n$value kWh', ...);
+                  },
+                ),
+              ),
+              titlesData: FlTitlesData(
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (value, meta) {
+                      // Ay isimlerini göster (Oca, Şub, Mar, ...)
+                      final monthName = DateFormat('MMM', 'tr_TR').format(data![value.toInt()].timestamp);
+                      return Text(monthName, ...);
+                    },
+                    reservedSize: 45,
+                  ),
+                ),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 48,
+                    interval: maxY / 4,
+                    getTitlesWidget: (value, meta) {
+                      // Y ekseni değerleri (0, 700, 1300, ...)
+                      final roundedValue = (value / 100).round() * 100;
+                      return Text(roundedValue.toString(), ...);
+                    },
+                  ),
+                ),
+              ),
+              borderData: FlBorderData(
+                show: true,
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey[300]!, width: 1),
+                  left: BorderSide(color: Colors.grey[300]!, width: 1),
+                ),
+              ),
+              gridData: FlGridData(
+                show: false, // Yatay grid çizgileri kapalı
+                drawVerticalLine: false, // fl_chart'ın dikey çizgileri kapalı
+              ),
+              barGroups: data!.asMap().entries.map((entry) {
+                final index = entry.key;
+                final point = entry.value;
+                return BarChartGroupData(
+                  x: index,
+                  barRods: [
+                    BarChartRodData(
+                      fromY: 0,
+                      toY: point.value,
+                      color: AppColors.webColor,
+                      width: 26,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(8),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+          // Dikey çizgiler (CustomPaint ile)
+          Positioned.fill(
+            left: 48,
+            right: 16,
+            top: 0,
+            bottom: 45,
+            child: CustomPaint(
+              painter: _VerticalLinePainter(
+                dataLength: data!.length,
+                lineColor: Colors.grey[300]!,
+                barWidth: 26.0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ✅ CustomPainter: Bar'lar arası dikey çizgiler
+class _VerticalLinePainter extends CustomPainter {
+  final int dataLength;
+  final Color lineColor;
+  final double barWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+
+    final chartWidth = size.width;
+    final totalSpace = chartWidth / dataLength;
+    final spacing = totalSpace - barWidth;
+    
+    // Her bar'ın SAĞ KENARINDAN çizgi çiz
+    for (int i = 0; i < dataLength - 1; i++) {
+      final barStartX = i * totalSpace + spacing / 2;
+      final barEndX = barStartX + barWidth;
+      
+      canvas.drawLine(
+        Offset(barEndX, 0),
+        Offset(barEndX, size.height),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+```
+
+**Kullanılan Kütüphaneler:**
+- ✅ `fl_chart` (v0.69.0): Bar chart çizmek için
+- ✅ `intl`: Türkçe ay isimleri ve tarih formatlaması için
+
+**Özellikler:**
+- ✅ 12 ayın aylık tüketim verilerini gösteriyor
+- ✅ Bar'lar arası dikey çizgiler (CustomPaint ile)
+- ✅ Tooltip desteği (bar'a dokununca ay ve değer gösteriyor)
+- ✅ Türkçe ay isimleri (Oca, Şub, Mar, ...)
+- ✅ Y ekseni değerleri yuvarlanmış (100'ün katları)
+- ✅ Responsive tasarım
+
+**Estetik Ayarlamalar:**
+- ✅ Grafik yüksekliği: 280px
+- ✅ Bar genişliği: 26px
+- ✅ Bar border radius: 8px (üst köşeler)
+- ✅ Yatay grid çizgileri kapalı
+- ✅ Dikey çizgiler bar'ların sağ kenarından çekiliyor
+- ✅ Font boyutları ve ağırlıkları optimize edildi
+
+---
+
+### ✅ ADIM 35: intl Paketi Locale Initialization Eklendi
+**Tarih:** 2025-12-31  
+**Dosya:** `lib/main.dart` ✅ DOSYA GÜNCELLENDİ
+
+**Eklenen Kod:**
+```dart
+import 'package:intl/date_symbol_data_local.dart';  // ✅ EKLENDİ
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Firebase initialization
+  await Firebase.initializeApp();
+  
+  // ✅ intl paketi için Türkçe locale initialization
+  await initializeDateFormatting('tr_TR', null);
+  
+  // Dependency injection
+  await di.init();
+  
+  runApp(const MyApp());
+}
+```
+
+**Yapılanlar:**
+- ✅ `intl/date_symbol_data_local.dart` import edildi
+- ✅ `initializeDateFormatting('tr_TR', null)` çağrıldı
+- ✅ Türkçe ay isimleri için locale hazırlandı
+
+**Neden Gerekli:**
+- `DateFormat('MMM', 'tr_TR')` kullanımı için locale verilerinin yüklenmesi gerekiyor
+- Aksi halde `LocaleDataException` hatası alınıyor
+
+---
+
+### ✅ ADIM 36: HomePage'e Grafik Entegrasyonu Yapıldı
+**Tarih:** 2025-12-31  
+**Dosya:** `lib/presentation/home/pages/home_page.dart` ✅ DOSYA GÜNCELLENDİ
+
+**Eklenen Kod:**
+```dart
+import '../widgets/annual_consumption_chart.dart';  // ✅ EKLENDİ
+
+// _buildSummaryCards metodunda:
+Widget _buildSummaryCards(BuildContext context) {
+  return BlocBuilder<HomeCubit, HomeState>(
+    builder: (context, state) {
+      if (state is HomeLoaded) {
+        final data = state.latestProductionConsumptionData;
+        if (data != null) {
+          // "Veri Yok" yerine gerçek veriler gösteriliyor
+          return Row(
+            children: [
+              Expanded(
+                child: DataSummaryCard(
+                  title: 'Günlük Tüketim',
+                  value: data.formattedDailyConsumption,
+                  isCurrency: false,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: DataSummaryCard(
+                  title: 'Günlük Üretim',
+                  value: data.formattedDailyProduction,
+                  isCurrency: false,
+                ),
+              ),
+            ],
+          );
+        }
+      }
+      // ... hata/loading durumları ...
+    },
+  );
+}
+
+// ✅ YENİ METOD: Yıllık tüketim grafiği
+Widget _buildAnnualConsumptionChart(BuildContext context) {
+  return BlocBuilder<HomeCubit, HomeState>(
+    builder: (context, state) {
+      if (state is HomeLoaded && state.annualConsumptionData != null) {
+        return AnnualConsumptionChart(data: state.annualConsumptionData);
+      } else if (state is HomeLoading) {
+        return Container(
+          height: 280,
+          child: const Center(child: CircularProgressIndicator()),
+        );
+      } else {
+        return Container(
+          height: 280,
+          color: Colors.grey[100],
+          child: const Center(
+            child: Text('Yıllık Tüketim Grafiği (Veri Yok)'),
+          ),
+        );
+      }
+    },
+  );
+}
+
+// build metodunda:
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ... diğer widget'lar ...
+            
+            // ✅ Yıllık tüketim grafiği eklendi
+            const SizedBox(height: 24),
+            _buildAnnualConsumptionChart(context),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+```
+
+**Yapılanlar:**
+- ✅ `AnnualConsumptionChart` widget'ı import edildi
+- ✅ `_buildAnnualConsumptionChart` metodu eklendi
+- ✅ BlocBuilder ile state yönetimi yapılıyor
+- ✅ Loading, loaded, error durumları için UI gösterimi eklendi
+- ✅ Grafik anasayfaya entegre edildi
+
+---
+
+### ✅ ADIM 37: API Endpoints Güncellendi
+**Tarih:** 2025-12-31  
+**Dosya:** `lib/core/constants/api_endpoints.dart` ✅ DOSYA GÜNCELLENDİ
+
+**Eklenen Endpoints:**
+```dart
+class BuildingEndpoints {
+  static const String list = '/api/v1/building';
+}
+
+class AnalyzerEndpoints {
+  static const String list = '/api/v1/analyzer';
+}
+
+class ConsumptionEndpoints {
+  static const String list = '/api/v1/consumption';
+}
+```
+
+**Yapılanlar:**
+- ✅ Building, Analyzer, Consumption endpoint'leri eklendi
+- ✅ HttpClient ile kullanılmak üzere hazırlandı
+
+---
+
+## 📦 KULLANILAN PAKETLER
+
+### fl_chart
+**Versiyon:** 0.69.0  
+**Kullanım Amacı:** Bar chart grafiği çizmek için
+
+**Kurulum:**
+```yaml
+dependencies:
+  fl_chart: ^0.69.0
+```
+
+**Kullanılan Özellikler:**
+- `BarChart`: Bar chart widget'ı
+- `BarChartData`: Grafik verisi ve ayarları
+- `BarChartGroupData`: Her bar için veri
+- `BarChartRodData`: Bar görünümü (renk, genişlik, border radius)
+- `FlTitlesData`: Eksen etiketleri
+- `AxisTitles` / `SideTitles`: Eksen başlıkları
+- `BarTouchData`: Dokunma ve tooltip desteği
+
+**API Değişiklikleri (v0.69.0):**
+- `BarChartRodData.y` → `BarChartRodData.toY` (ve `fromY: 0`)
+- `SideTitles` → `AxisTitles(sideTitles: SideTitles(...))`
+- `getTitles` → `getTitlesWidget` (Widget döndürmeli)
+
+---
+
+### intl
+**Versiyon:** Mevcut  
+**Kullanım Amacı:** Türkçe tarih formatlaması ve ay isimleri
+
+**Kullanılan Özellikler:**
+- `DateFormat('MMM', 'tr_TR')`: Kısa ay isimleri (Oca, Şub, Mar, ...)
+- `initializeDateFormatting('tr_TR', null)`: Locale initialization
+
+---
+
+## 🐛 ÇÖZÜLEN HATALAR
+
+### Hata 1: LocaleDataException
+**Hata Mesajı:**
+```
+LocaleDataException: Locale data has not been initialized, call initializeDateFormatting(<locale>, null) first.
+```
+
+**Çözüm:**
+- `lib/main.dart`'a `initializeDateFormatting('tr_TR', null)` eklendi
+- `intl/date_symbol_data_local.dart` import edildi
+
+---
+
+### Hata 2: fl_chart API Uyumsuzluğu
+**Hata Mesajı:**
+```
+The named parameter 'y' isn't defined.
+The argument type 'SideTitles' can't be assigned to the parameter type 'AxisTitles'.
+The named parameter 'getTitles' isn't defined.
+```
+
+**Çözüm:**
+- `BarChartRodData.y` → `BarChartRodData.toY` (ve `fromY: 0`)
+- `SideTitles` → `AxisTitles(sideTitles: SideTitles(...))`
+- `getTitles` → `getTitlesWidget` (Widget döndürmeli)
+
+---
+
+### Hata 3: Building Model Null Safety
+**Hata Mesajı:**
+```
+type 'Null' is not a subtype of type 'List<dynamic>' in type cast
+```
+
+**Çözüm:**
+- `BuildingModel`'de `contactPersons` için `@JsonKey(name: 'contact_persons', defaultValue: [])` eklendi
+- Constructor'da default boş liste eklendi
+- Backend'de null kontrolü eklendi
+
+---
+
+## 📊 Oluşturulan/Güncellenen Dosyalar Özeti
+
+### Backend
+1. ✅ `ekokod_backend/main.py` (GÜNCELLENDİ - 3 endpoint eklendi)
+
+### Domain Layer (Entities)
+2. ✅ `lib/domain/entities/building_entity.dart` (YENİ)
+3. ✅ `lib/domain/entities/analyzer_entity.dart` (YENİ)
+4. ✅ `lib/domain/entities/chart_entity.dart` (YENİ)
+
+### Domain Layer (Repositories)
+5. ✅ `lib/domain/repositories/i_building_repository.dart` (YENİ)
+6. ✅ `lib/domain/repositories/i_analyzer_repository.dart` (YENİ)
+7. ✅ `lib/domain/repositories/i_consumption_repository.dart` (YENİ)
+
+### Data Layer (Models)
+8. ✅ `lib/data/models/building_model.dart` (GÜNCELLENDİ - null safety)
+9. ✅ `lib/data/models/analyzer_model.dart` (YENİ)
+10. ✅ `lib/data/models/consumption_entity_model.dart` (YENİ veya GÜNCELLENDİ)
+
+### Data Layer (DataSources)
+11. ✅ `lib/data/datasources/remote_building_datasource.dart` (YENİ)
+12. ✅ `lib/data/datasources/remote_analyzer_datasource.dart` (YENİ)
+13. ✅ `lib/data/datasources/remote_consumption_datasource.dart` (YENİ)
+
+### Data Layer (Repositories)
+14. ✅ `lib/data/repositories/building_repository_impl.dart` (YENİ)
+15. ✅ `lib/data/repositories/analyzer_repository_impl.dart` (YENİ)
+16. ✅ `lib/data/repositories/consumption_repository_impl.dart` (YENİ)
+
+### Application Layer (Cubits)
+17. ✅ `lib/application/home/home_cubit.dart` (GÜNCELLENDİ - yıllık veri çekme)
+18. ✅ `lib/application/home/home_state.dart` (GÜNCELLENDİ - annualConsumptionData)
+
+### Presentation Layer
+19. ✅ `lib/presentation/home/widgets/annual_consumption_chart.dart` (YENİ)
+20. ✅ `lib/presentation/home/pages/home_page.dart` (GÜNCELLENDİ - grafik entegrasyonu)
+
+### Infrastructure
+21. ✅ `lib/core/constants/api_endpoints.dart` (GÜNCELLENDİ - yeni endpoint'ler)
+22. ✅ `lib/injections/injection_container.dart` (GÜNCELLENDİ - yeni repository'ler)
+23. ✅ `lib/main.dart` (GÜNCELLENDİ - locale initialization)
+
+---
+
+## 🎉 TAMAMLANDI!
+
+**Backend:** ✅ Tamamlandı
+- 3 yeni endpoint eklendi (`/api/v1/building`, `/api/v1/analyzer`, `/api/v1/consumption`)
+- MongoDB bağlantıları mevcut
+- Serialize işlemleri yapılıyor
+
+**Mobile App:** ✅ Tamamlandı
+- Tüm repository katmanları oluşturuldu
+- HomeCubit'e yıllık veri çekme eklendi
+- Grafik widget'ı oluşturuldu ve anasayfaya entegre edildi
+- fl_chart ve intl paketleri kullanıldı
+
+**Test:**
+1. Backend'i başlatın
+2. MongoDB'ye building, analyzer, consumption verileri ekleyin
+3. Mobile app'i çalıştırın
+4. Anasayfada yıllık tüketim grafiği görünecek!
+
+---
+
+**Son Güncelleme:** 2025-12-31  
+**Durum:** ✅ TAMAMLANDI

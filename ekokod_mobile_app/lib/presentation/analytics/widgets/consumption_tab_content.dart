@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/shared/enums.dart';
 import '../../../core/constants/app_themes.dart';
 import '../../shared_widgets/custom_dropdown.dart';
 import '../../shared_widgets/data_chart_card.dart';
+import '../../../application/analytics/analytics_cubit.dart';
+import 'consumption_chart.dart';
 
 class ConsumptionTabContent extends StatelessWidget {
   final PeriodType selectedPeriod;
@@ -55,7 +58,42 @@ class ConsumptionTabContent extends StatelessWidget {
         ),
 
         // GRAFİK KARTI (Sadece beyaz arkaplan ve grafik)
-        const DataChartCard(chartWidget: EChart()),
+        BlocBuilder<AnalyticsCubit, AnalyticsState>(
+          builder: (context, state) {
+            if (state is AnalyticsLoading) {
+              return const DataChartCard(
+                chartWidget: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+            
+            if (state is AnalyticsLoaded && state.consumptionData != null) {
+              // Period bilgisini state'ten al, yoksa selectedPeriod'u kullan
+              final period = state.selectedPeriod ?? selectedPeriod;
+              return DataChartCard(
+                chartWidget: ConsumptionChart(
+                  data: state.consumptionData,
+                  period: period,
+                ),
+              );
+            }
+            
+            if (state is AnalyticsError) {
+              return DataChartCard(
+                chartWidget: Center(
+                  child: Text(
+                    'Hata: ${state.message}',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+              );
+            }
+            
+            // Varsayılan placeholder
+            return const DataChartCard(chartWidget: EChart());
+          },
+        ),
 
         const SizedBox(height: 15),
 

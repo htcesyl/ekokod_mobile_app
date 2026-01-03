@@ -47,6 +47,7 @@ import '../data/repositories/production_consumption_repository_impl.dart';
 import '../domain/repositories/i_production_consumption_repository.dart';
 import '../application/home/get_daily_production_consumption_usecase.dart';
 import '../application/home/home_cubit.dart';
+import '../application/analytics/analytics_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -206,7 +207,14 @@ Future<void> init() async {
     ),
   );
 
-  // ========= DİĞER MODÜLLER İÇİN YER =========
-  // Buraya ileride analytics, bills vb. için
-  // datasource + repository + usecase + cubit kayıtlarını ekleyeceğiz.
+  // ========= ANALYTICS =========
+
+  // Cubit
+  sl.registerFactory<AnalyticsCubit>(
+    () => AnalyticsCubit(
+      buildingRepository: sl(),
+      analyzerRepository: sl(),
+      consumptionRepository: sl(),
+    ),
+  );
 }
