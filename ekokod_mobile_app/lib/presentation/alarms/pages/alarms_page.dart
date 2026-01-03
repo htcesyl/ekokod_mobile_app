@@ -48,143 +48,109 @@ class _AlarmPageState extends State<AlarmPage> {
 
   String _formatDate(DateTime date) {
     if (!_localeInitialized) {
-      // Locale henüz initialize olmadıysa basit format kullan
       return DateFormat('dd MMM yyyy, HH:mm').format(date);
     }
     return DateFormat('dd MMMM yyyy, HH:mm', 'tr_TR').format(date);
   }
 
+  // ----------------------------
+  // UI Helper'lar (tekilleştirme)
+  // ----------------------------
+  Widget _buildLoading() {
+    return const Center(child: CircularProgressIndicator());
+  }
+
+  Widget _buildBuildingFilter() {
+    return Row(
+      children: [
+        const Text('Bina Seçiniz', style: TextStyle(fontSize: 14)),
+        const SizedBox(width: 10),
+        CustomDropdown(
+          label: '',
+          selectedItem: _selectedBuilding,
+          items: _buildings,
+          onChanged: _handleBuildingChange,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActiveAlarmsHeader() {
+    return const Text(
+      'Aktif Alarmlar',
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 18,
+        color: AppColors.black,
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        children: [
+          const SizedBox(height: 40),
+          Icon(Icons.notifications_off, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            'Aktif alarm bulunmuyor',
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+          const SizedBox(height: 16),
+          Text(
+            'Hata: $message',
+            style: const TextStyle(color: Colors.red),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              context.read<AlarmCubit>().fetchAlarms();
+            },
+            child: const Text('Tekrar Dene'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Sayfa Arkaplan Gradyanı
     return BlocProvider(
-      create: (_) => sl<AlarmCubit>(),
+      // ✅ İlk açılışta fetch burada tetikleniyor (AlarmInitial bloğundaki duplicate akış kalktı)
+      create: (_) => sl<AlarmCubit>()..fetchAlarms(),
       child: Container(
-        decoration: const BoxDecoration(
-          // Diğer sayfalarda kullanılan gradyanı kullanıyoruz
-          gradient: secondBackgroundGradient,
-        ),
+        decoration: const BoxDecoration(gradient: secondBackgroundGradient),
         child: Scaffold(
-          backgroundColor:
-              Colors.transparent, // Gradyanın görünmesi için şeffaf
-          // Custom AppBar
-          appBar: const CustomAppBar(
-            weatherData: '21°C', // Mock Hava Durumu
-          ),
-
-          // Bottom Navigation Bar
-          bottomNavigationBar: const MainBottomNavBar(
-            selectedIndex: 3, // 'Alarm' sayfasının indeksi (0, 1, 2, 3)
-          ),
-
-          // Sayfa İçeriği
+          backgroundColor: Colors.transparent,
+          appBar: const CustomAppBar(weatherData: '21°C'),
+          bottomNavigationBar: const MainBottomNavBar(selectedIndex: 3),
           body: BlocBuilder<AlarmCubit, AlarmState>(
             builder: (context, state) {
-              // İlk yüklemede alarmları çek
-              if (state is AlarmInitial) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  context.read<AlarmCubit>().fetchAlarms();
-                });
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (state is AlarmLoading) {
-                return const Center(child: CircularProgressIndicator());
+              if (state is AlarmInitial || state is AlarmLoading) {
+                return _buildLoading();
               }
 
               if (state is AlarmError) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: Colors.red[300],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Hata: ${state.message}',
-                        style: const TextStyle(color: Colors.red),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          context.read<AlarmCubit>().fetchAlarms();
-                        },
-                        child: const Text('Tekrar Dene'),
-                      ),
-                    ],
-                  ),
-                );
+                return _buildErrorState(context, state.message);
               }
 
               if (state is AlarmLoaded) {
                 final alarms = state.alarms;
 
-                // Eğer alarm yoksa
-                if (alarms.isEmpty) {
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 10.0,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Bina Seçimi Filtresi
-                        Row(
-                          children: [
-                            const Text(
-                              'Bina Seçiniz',
-                              style: TextStyle(fontSize: 14),
-                            ),
-                            const SizedBox(width: 10),
-                            CustomDropdown(
-                              label: '',
-                              selectedItem: _selectedBuilding,
-                              items: _buildings,
-                              onChanged: _handleBuildingChange,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          'Aktif Alarmlar',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: AppColors.black,
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-                        Center(
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.notifications_off,
-                                size: 64,
-                                color: Colors.grey[400],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Aktif alarm bulunmuyor',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                // En son log'u al (en güncel alarm bilgisi için)
-                // Her alarm için en son log'u göster
+                // ✅ Scroll + Padding + Column tek yerde
                 return SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16.0,
@@ -193,54 +159,27 @@ class _AlarmPageState extends State<AlarmPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ------------------------------------
-                      // 1. Bina Seçimi Filtresi
-                      // ------------------------------------
-                      Row(
-                        children: [
-                          const Text(
-                            'Bina Seçiniz',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                          const SizedBox(width: 10),
-                          CustomDropdown(
-                            label: '',
-                            selectedItem: _selectedBuilding,
-                            items: _buildings,
-                            onChanged: _handleBuildingChange,
-                          ),
-                        ],
-                      ),
+                      _buildBuildingFilter(),
                       const SizedBox(height: 20),
-                      // ------------------------------------
-                      // 2. Aktif Alarmlar Başlığı
-                      // ------------------------------------
-                      const Text(
-                        'Aktif Alarmlar',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: AppColors.black,
-                        ),
-                      ),
+                      _buildActiveAlarmsHeader(),
                       const SizedBox(height: 10),
 
-                      // Alarmlar Listesi
-                      ...alarms.map((alarm) {
-                        // En son log'u al
-                        final latestLog =
-                            alarm.logs.isNotEmpty
-                                ? alarm.logs.reduce(
+                      if (alarms.isEmpty)
+                        _buildEmptyState()
+                      else
+                        ...alarms.map((alarm) {
+                          final latestLog = alarm.logs.isNotEmpty
+                              ? alarm.logs.reduce(
                                   (a, b) =>
                                       a.timestamp.isAfter(b.timestamp) ? a : b,
                                 )
-                                : null;
+                              : null;
 
-                        return _buildAlarmItem(
-                          alarm: alarm,
-                          latestLog: latestLog,
-                        );
-                      }).toList(),
+                          return _buildAlarmItem(
+                            alarm: alarm,
+                            latestLog: latestLog,
+                          );
+                        }),
 
                       const SizedBox(height: 20),
                     ],
@@ -248,8 +187,7 @@ class _AlarmPageState extends State<AlarmPage> {
                 );
               }
 
-              // Initial state
-              return const Center(child: CircularProgressIndicator());
+              return _buildLoading();
             },
           ),
         ),
@@ -257,13 +195,14 @@ class _AlarmPageState extends State<AlarmPage> {
     );
   }
 
-  // Her bir alarm öğesini temsil eden basit kart
+  // Her bir alarm öğesini temsil eden ve tüm log geçmişini gösteren kart
   Widget _buildAlarmItem({required AlarmEntity alarm, AlarmLog? latestLog}) {
     final alarmName = alarm.name;
     final alarmType = alarm.type;
-    final logMessage = latestLog?.message ?? 'Alarm aktif';
-    final logDetails = latestLog?.details ?? '';
     final logDate = latestLog?.timestamp ?? alarm.updatedAt;
+
+    final sortedLogs = List<AlarmLog>.from(alarm.logs)
+      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -292,58 +231,128 @@ class _AlarmPageState extends State<AlarmPage> {
           ],
         ),
         trailing: Switch(
-          value: true, // Alarm aktif (şimdilik her zaman true)
+          value: true,
           onChanged: (bool value) {
             // TODO: Alarm durumunu güncelleme Cubit çağrısı
           },
           activeColor: AppColors.webColor,
         ),
         children: [
-          if (logMessage.isNotEmpty || logDetails.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (logMessage.isNotEmpty) ...[
-                    Text(
-                      'Mesaj:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(logMessage, style: const TextStyle(fontSize: 14)),
-                  ],
-                  if (logDetails.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      'Detay:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(logDetails, style: const TextStyle(fontSize: 14)),
-                  ],
-                  if (alarm.logs.length > 1) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      'Toplam ${alarm.logs.length} log kaydı',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
             ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (sortedLogs.isEmpty)
+                  const Text('Log kaydı bulunamadı.')
+                else ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Log Geçmişi',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Text(
+                        'Toplam ${sortedLogs.length} kayıt',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  ...sortedLogs.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final log = entry.value;
+                    final isFirst = index == 0;
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12.0),
+                      padding: const EdgeInsets.all(12.0),
+                      decoration: BoxDecoration(
+                        color: isFirst
+                            ? AppColors.webColor.withValues(alpha: 0.1)
+                            : Colors.grey[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isFirst
+                              ? AppColors.webColor.withValues(alpha: 0.3)
+                              : Colors.grey[200]!,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                _formatDate(log.timestamp),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: isFirst
+                                      ? AppColors.webColor
+                                      : Colors.grey[700],
+                                ),
+                              ),
+                              if (isFirst)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.webColor,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'Yeni',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          if (log.message.isNotEmpty)
+                            Text(
+                              log.message,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          if (log.details.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              log.details,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );
