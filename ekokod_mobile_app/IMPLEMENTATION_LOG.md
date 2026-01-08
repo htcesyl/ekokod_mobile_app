@@ -2197,3 +2197,383 @@ type 'Null' is not a subtype of type 'List<dynamic>' in type cast
 
 **Son Güncelleme:** 2025-12-31  
 **Durum:** ✅ TAMAMLANDI
+
+---
+
+## 📋 FATURALAR SAYFASI BILL HISTORY ENTEGRASYONU
+
+**Tarih:** 2025-01-XX  
+**Durum:** ✅ TAMAMLANDI
+
+### 🎯 Amaç
+Faturalar sayfasına bill history entegrasyonu yaparak:
+- Binaların fatura geçmişini göstermek
+- Son hesaplan faturayı göstermek
+- Son 12 ayın fatura grafiğini çizmek
+- Bina seçimine göre dinamik veri göstermek
+
+---
+
+## ✅ TAMAMLANAN ADIMLAR
+
+### ✅ ADIM 38: BillsCubit ve BillsState Oluşturuldu
+**Tarih:** 2025-01-XX  
+**Dosyalar:**
+- `lib/application/bills/bills_cubit.dart` ✅ YENİ DOSYA
+- `lib/application/bills/bills_state.dart` ✅ YENİ DOSYA
+
+**BillsState İçeriği:**
+```dart
+abstract class BillsState extends Equatable {
+  const BillsState();
+}
+
+class BillsInitial extends BillsState {
+  const BillsInitial();
+}
+
+class BillsLoading extends BillsState {
+  const BillsLoading();
+}
+
+class BillsLoaded extends BillsState {
+  final List<BuildingEntity> buildings;
+  final BuildingEntity? selectedBuilding;
+  final BillHistoryItemEntity? latestBill;
+  final List<ChartPointEntity>? billsChartData; // Son 12 ay için grafik verisi
+  
+  // copyWith metodu eklendi
+}
+
+class BillsError extends BillsState {
+  final String message;
+  const BillsError({required this.message});
+}
+```
+
+**BillsCubit İçeriği:**
+```dart
+class BillsCubit extends Cubit<BillsState> {
+  final IBuildingRepository buildingRepository;
+
+  // Metodlar:
+  // 1. loadBuildings(): Binaları yükler ve ilk binayı seçer
+  // 2. loadBillsForBuilding(String buildingId): Belirli bir bina için faturaları yükler
+  // 3. selectBuilding(String buildingId): Bina seçimini değiştirir
+  // 4. _prepareBillsChartData(): Son 12 ayın fatura verilerini ChartPointEntity listesine çevirir
+}
+```
+
+**Yapılanlar:**
+- ✅ 4 state eklendi (Initial, Loading, Loaded, Error)
+- ✅ `BillsLoaded` state'ine `buildings`, `selectedBuilding`, `latestBill`, `billsChartData` alanları eklendi
+- ✅ `copyWith` metodu eklendi (state güncellemeleri için)
+- ✅ `loadBuildings()` metodu: Tüm binaları yükler ve ilk binayı seçer
+- ✅ `loadBillsForBuilding()` metodu: Seçili bina için fatura geçmişini yükler
+- ✅ `_prepareBillsChartData()` metodu: Son 12 ayın fatura verilerini grafik için hazırlar
+- ✅ `BillHistoryParser.getLatestBill()` kullanılarak en son fatura alınıyor
+- ✅ Eksik aylar için 0 değeri ile placeholder ekleniyor
+
+---
+
+### ✅ ADIM 39: BillsChart Widget Oluşturuldu
+**Tarih:** 2025-01-XX  
+**Dosya:** `lib/presentation/bills/widgets/bills_chart.dart` ✅ YENİ DOSYA
+
+**Widget İçeriği:**
+```dart
+class BillsChart extends StatelessWidget {
+  final List<ChartPointEntity>? data;
+
+  // Özellikler:
+  // - Bar chart (fl_chart kullanılarak)
+  // - Son 12 ayın fatura tutarlarını gösterir
+  // - Tooltip desteği (ay ve tutar gösterir)
+  // - Türkçe ay isimleri (Oca, Şub, Mar, ...)
+  // - Y ekseni: ₺ 0K, ₺ 10K, ₺ 20K formatında
+  // - Veri yoksa placeholder gösterir
+}
+```
+
+**Yapılanlar:**
+- ✅ `fl_chart` kütüphanesi kullanıldı (BarChart)
+- ✅ Bar chart yapılandırması:
+  - Bar genişliği: 24px
+  - Bar border radius: 8px (üst köşeler)
+  - Bar rengi: `AppColors.webColor` (veri varsa), `Colors.grey[300]` (veri yoksa)
+  - Bar'lar arası boşluk: `BarChartAlignment.spaceBetween`
+- ✅ Tooltip yapılandırması:
+  - Format: "Ara 2025\n₺ 35002.51"
+  - Türkçe ay isimleri (`DateFormat('MMM yyyy', 'tr_TR')`)
+- ✅ X ekseni (alt):
+  - Ay isimleri gösteriliyor (`DateFormat('MMM', 'tr_TR')`)
+  - Reserved size: 45px
+- ✅ Y ekseni (sol):
+  - Format: "₺ 0K", "₺ 10K", "₺ 20K" (binlik gösterim)
+  - Reserved size: 50px
+  - Interval: maxY / 4
+- ✅ Grid çizgileri:
+  - Yatay grid çizgileri gösteriliyor
+  - Dikey grid çizgileri kapalı
+- ✅ Border:
+  - Alt ve sol kenarlarda border gösteriliyor
+- ✅ Veri yoksa placeholder gösteriliyor
+
+---
+
+### ✅ ADIM 40: BillsPage Entegrasyonu Yapıldı
+**Tarih:** 2025-01-XX  
+**Dosya:** `lib/presentation/bills/pages/bills_page.dart` ✅ DOSYA GÜNCELLENDİ
+
+**Değişiklikler:**
+
+**1. Import'lar:**
+```dart
+// ÖNCE:
+import 'package:flutter/material.dart';
+import '../../../core/constants/app_themes.dart';
+
+// SONRA:
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_themes.dart';
+import '../../../application/bills/bills_cubit.dart';
+import '../widgets/bills_chart.dart';
+```
+
+**2. State Yönetimi:**
+```dart
+// ÖNCE:
+class _BillsPageState extends State<BillsPage> {
+  String _selectedBuilding = 'Bina 1';
+  final List<String> _buildings = ['Bina 1', 'Bina 2', 'Tüm Binalar'];
+  
+  void _handleBuildingChange(String? building) {
+    // Mock state yönetimi
+  }
+}
+
+// SONRA:
+class _BillsPageState extends State<BillsPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Binaları ve faturaları yükle
+    context.read<BillsCubit>().loadBuildings();
+  }
+}
+```
+
+**3. UI Güncellemeleri:**
+```dart
+// ÖNCE:
+body: SingleChildScrollView(
+  child: Column(
+    children: [
+      // Mock bina seçimi
+      CustomDropdown(
+        selectedItem: _selectedBuilding,
+        items: _buildings,
+        onChanged: _handleBuildingChange,
+      ),
+      // Mock fatura kartları
+      DataSummaryCard(title: 'Tüketim', value: '3.240 kWh'),
+      DataSummaryCard(title: 'Tutar', value: '₺ 12.480'),
+      // Placeholder grafik
+      DataChartCard(chartWidget: EChart()),
+    ],
+  ),
+)
+
+// SONRA:
+body: BlocBuilder<BillsCubit, BillsState>(
+  builder: (context, state) {
+    if (state is BillsLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
+    if (state is BillsError) {
+      return Center(child: Text('Hata: ${state.message}'));
+    }
+    
+    if (state is BillsLoaded) {
+      return SingleChildScrollView(
+        child: Column(
+          children: [
+            // Gerçek bina seçimi
+            CustomDropdown(
+              selectedItem: state.selectedBuilding?.name ?? 'Bina Seçiniz',
+              items: state.buildings.map((b) => b.name).toList(),
+              onChanged: (String? buildingName) {
+                if (buildingName != null) {
+                  final building = state.buildings.firstWhere(
+                    (b) => b.name == buildingName,
+                  );
+                  context.read<BillsCubit>().selectBuilding(building.id);
+                }
+              },
+            ),
+            // Gerçek fatura kartları
+            _buildLatestBillCards(state.latestBill),
+            // Gerçek grafik
+            DataChartCard(
+              chartWidget: BillsChart(data: state.billsChartData),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    return const Center(child: Text('Veri yükleniyor...'));
+  },
+)
+```
+
+**4. Yeni Metod:**
+```dart
+/// Son hesaplan fatura kartlarını oluşturur
+Widget _buildLatestBillCards(bill) {
+  if (bill == null) {
+    return Row(
+      children: [
+        DataSummaryCard(title: 'Tüketim', value: '-'),
+        DataSummaryCard(title: 'Tutar', value: '-'),
+      ],
+    );
+  }
+
+  // Tüketim değerini formatla (kWh)
+  final consumption = bill.totalActiveKWh;
+  final consumptionText = consumption > 0
+      ? '${consumption.toStringAsFixed(2)} kWh'
+      : '-';
+
+  // Tutar değerini formatla (TL)
+  final totalCost = bill.totalCost;
+  final costText = totalCost > 0
+      ? '₺ ${totalCost.toStringAsFixed(2)}'
+      : '-';
+
+  return Row(
+    children: [
+      DataSummaryCard(title: 'Tüketim', value: consumptionText),
+      DataSummaryCard(title: 'Tutar', value: costText),
+    ],
+  );
+}
+```
+
+**Yapılanlar:**
+- ✅ `BlocBuilder` ile state yönetimi eklendi
+- ✅ Loading, Error, Loaded durumları için UI gösterimi eklendi
+- ✅ Bina seçimi dropdown'u gerçek verilerle güncellendi
+- ✅ Son hesaplan fatura kartları gerçek verilerle güncellendi
+- ✅ Faturalar grafiği gerçek verilerle gösteriliyor
+- ✅ `_buildLatestBillCards()` metodu eklendi (fatura kartlarını oluşturur)
+- ✅ Veri formatlaması eklendi (kWh ve TL formatı)
+
+---
+
+### ✅ ADIM 41: Dependency Injection Kayıtları Eklendi
+**Tarih:** 2025-01-XX  
+**Dosya:** `lib/injections/injection_container.dart` ✅ DOSYA GÜNCELLENDİ
+
+**Eklenen Import:**
+```dart
+import '../application/bills/bills_cubit.dart';
+```
+
+**Eklenen Kayıt:**
+```dart
+// ========= BILLS =========
+
+// Cubit
+sl.registerFactory<BillsCubit>(
+  () => BillsCubit(
+    buildingRepository: sl(),
+  ),
+);
+```
+
+**Yapılanlar:**
+- ✅ `BillsCubit` import edildi
+- ✅ `BillsCubit` factory olarak kaydedildi (her seferinde yeni instance)
+- ✅ `IBuildingRepository` dependency injection ile sağlanıyor
+
+---
+
+### ✅ ADIM 42: Router Güncellendi (BlocProvider Eklendi)
+**Tarih:** 2025-01-XX  
+**Dosya:** `lib/core/router/app_router.dart` ✅ DOSYA GÜNCELLENDİ
+
+**Eklenen Import'lar:**
+```dart
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../injections/injection_container.dart' as di;
+import '../../application/bills/bills_cubit.dart';
+```
+
+**Güncellenen Route:**
+```dart
+// ÖNCE:
+GoRoute(
+  path: RoutePaths.bills,
+  name: RouteNames.bills,
+  builder: (context, state) => const BillsPage(),
+),
+
+// SONRA:
+GoRoute(
+  path: RoutePaths.bills,
+  name: RouteNames.bills,
+  builder: (context, state) => BlocProvider<BillsCubit>(
+    create: (_) => di.sl<BillsCubit>(),
+    child: const BillsPage(),
+  ),
+),
+```
+
+**Yapılanlar:**
+- ✅ `BillsPage` route'u `BlocProvider` ile sarmalandı
+- ✅ `BillsCubit` dependency injection'dan alınıyor
+- ✅ Her route geçişinde yeni `BillsCubit` instance'ı oluşturuluyor
+
+---
+
+## 📊 Oluşturulan/Güncellenen Dosyalar Özeti
+
+### Application Layer (Cubits)
+1. ✅ `lib/application/bills/bills_cubit.dart` (YENİ)
+2. ✅ `lib/application/bills/bills_state.dart` (YENİ)
+
+### Presentation Layer
+3. ✅ `lib/presentation/bills/widgets/bills_chart.dart` (YENİ)
+4. ✅ `lib/presentation/bills/pages/bills_page.dart` (GÜNCELLENDİ)
+
+### Infrastructure
+5. ✅ `lib/injections/injection_container.dart` (GÜNCELLENDİ - BillsCubit kaydı)
+6. ✅ `lib/core/router/app_router.dart` (GÜNCELLENDİ - BlocProvider eklendi)
+
+---
+
+## 🎉 TAMAMLANDI!
+
+**Faturalar Sayfası:** ✅ Tamamlandı
+- Bill history entegrasyonu yapıldı
+- Bina seçimi dinamik hale getirildi
+- Son hesaplan fatura gösteriliyor
+- Son 12 ayın fatura grafiği çiziliyor
+- State yönetimi (Cubit) eklendi
+- Dependency injection yapıldı
+
+**Test:**
+1. Backend'den building verileri çekiliyor (billHistory dahil)
+2. Faturalar sayfasına gidildiğinde binalar yükleniyor
+3. Bina seçildiğinde o binanın faturaları gösteriliyor
+4. Son hesaplan fatura kartları gerçek verilerle dolduruluyor
+5. Son 12 ayın fatura grafiği çiziliyor
+
+---
+
+**Son Güncelleme:** 2025-01-XX  
+**Durum:** ✅ TAMAMLANDI

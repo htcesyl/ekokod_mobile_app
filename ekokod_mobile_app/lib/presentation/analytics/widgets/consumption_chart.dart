@@ -33,8 +33,11 @@ class ConsumptionChart extends StatelessWidget {
       );
     }
 
-    // En yüksek değeri bul
-    final maxValue = data!.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+    // En yüksek değeri bul (veri olmayan günleri hariç tut)
+    final dataWithValues = data!.where((e) => e.value >= 0).toList();
+    final maxValue = dataWithValues.isEmpty 
+        ? 100.0 // Varsayılan değer
+        : dataWithValues.map((e) => e.value).reduce((a, b) => a > b ? a : b);
     final maxY = (maxValue * 1.15).ceilToDouble();
 
     return Container(
@@ -58,6 +61,20 @@ class ConsumptionChart extends StatelessWidget {
                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
                     final date = data![groupIndex].timestamp;
                     final label = _formatTooltipLabel(date);
+                    final point = data![groupIndex];
+                    final isNoData = point.value < 0;
+                    
+                    if (isNoData) {
+                      return BarTooltipItem(
+                        '$label\nVeri Yok',
+                        const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      );
+                    }
+                    
                     final value = rod.toY.toStringAsFixed(2);
                     return BarTooltipItem(
                       '$label\n$value kWh',
@@ -80,11 +97,14 @@ class ConsumptionChart extends StatelessWidget {
                 ),
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
-                    showTitles: true,
+                    showTitles: period != PeriodType.day, // Günlük period'da tarih etiketleri gösterilmez
                     getTitlesWidget: (value, meta) {
                       if (value.toInt() >= 0 && value.toInt() < data!.length) {
                         final date = data![value.toInt()].timestamp;
-                        final label = _formatBottomLabel(date);
+                        final label = _formatBottomLabel(date, value.toInt());
+                        if (label.isEmpty) {
+                          return const Text('');
+                        }
                         return Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
@@ -99,7 +119,7 @@ class ConsumptionChart extends StatelessWidget {
                       }
                       return const Text('');
                     },
-                    reservedSize: 45,
+                    reservedSize: period == PeriodType.day ? 20 : 45, // Günlük period'da daha az yer
                   ),
                 ),
                 leftTitles: AxisTitles(
@@ -142,36 +162,25 @@ class ConsumptionChart extends StatelessWidget {
               barGroups: data!.asMap().entries.map((entry) {
                 final index = entry.key;
                 final point = entry.value;
+                // Veri olmayan günler için (value: -1) küçük ince çizgi göster
+                final isNoData = point.value < 0;
                 return BarChartGroupData(
                   x: index,
                   barRods: [
                     BarChartRodData(
                       fromY: 0,
-                      toY: point.value,
-                      color: AppColors.webColor,
-                      width: _getBarWidth(),
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(8),
-                      ),
+                      toY: isNoData ? maxY * 0.02 : point.value, // Veri yoksa çok küçük bir yükseklik
+                      color: isNoData ? Colors.grey[300]! : AppColors.webColor,
+                      width: isNoData ? 1.0 : _getBarWidth(), // Veri yoksa çok ince çizgi
+                      borderRadius: isNoData 
+                          ? BorderRadius.zero // Veri yoksa köşeleri yuvarlatma
+                          : const BorderRadius.vertical(
+                              top: Radius.circular(8),
+                            ),
                     ),
                   ],
                 );
               }).toList(),
-            ),
-          ),
-          // Dikey çizgiler
-          Positioned.fill(
-            left: 48,
-            right: 16,
-            top: 0,
-            bottom: 45,
-            child: CustomPaint(
-              painter: _VerticalLinePainter(
-                dataLength: data!.length,
-                lineColor: Colors.grey[300]!,
-                barWidth: _getBarWidth(),
-                groupsSpace: _getGroupsSpace(),
-              ),
             ),
           ),
         ],
@@ -195,26 +204,26 @@ class ConsumptionChart extends StatelessWidget {
   double _getGroupsSpace() {
     switch (period) {
       case PeriodType.day:
-        return 4; // Günlük veriler için daha az boşluk
+        return 1; // Günlük veriler için çok az boşluk (365 gün olduğu için)
       case PeriodType.week:
         return 6; // Haftalık veriler için orta boşluk
       case PeriodType.month:
-        return 8; // Aylık veriler için normal boşluk
+        return 35; // Aylık veriler için belirgin boşluk (aylar arası) - görseldeki gibi
       case PeriodType.year:
-        return 8; // Yıllık veriler için normal boşluk
+        return 40; // Yıllık veriler için belirgin boşluk (yıllar arası) - görseldeki gibi
     }
   }
 
   double _getBarWidth() {
     switch (period) {
       case PeriodType.day:
-        return 20; // Günlük veriler için daha ince
+        return 2; // Günlük veriler için çok ince (365 gün olduğu için)
       case PeriodType.week:
         return 22; // Haftalık veriler için orta
       case PeriodType.month:
-        return 24; // Aylık veriler için normal
+        return 18; // Aylık veriler için daha ince (boşluk daha belirgin olsun)
       case PeriodType.year:
-        return 26; // Yıllık veriler için kalın
+        return 20; // Yıllık veriler için ince (boşluk daha belirgin olsun)
     }
   }
 
@@ -225,63 +234,30 @@ class ConsumptionChart extends StatelessWidget {
       case PeriodType.week:
         return DateFormat('dd/MM', 'tr_TR').format(date);
       case PeriodType.month:
-        return DateFormat('dd/MM', 'tr_TR').format(date);
-      case PeriodType.year:
         return DateFormat('MMM yyyy', 'tr_TR').format(date);
+      case PeriodType.year:
+        return date.year.toString();
     }
   }
 
-  String _formatBottomLabel(DateTime date) {
+  String _formatBottomLabel(DateTime date, int index) {
     switch (period) {
       case PeriodType.day:
-        // Günlük: Saat göster (eğer saatlik veri varsa) veya gün
-        return DateFormat('dd', 'tr_TR').format(date);
+        // Günlük: Her ayın 1'ini ve 15'ini göster, ayrıca her 30 günde bir göster
+        // 365 gün olduğu için çok kalabalık olmaması için seyrek göster
+        if (date.day == 1 || date.day == 15 || index % 30 == 0) {
+          return DateFormat('dd/MM', 'tr_TR').format(date);
+        }
+        return ''; // Diğer günler için boş string döndür
       case PeriodType.week:
         // Haftalık: Gün göster
         return DateFormat('dd', 'tr_TR').format(date);
       case PeriodType.month:
-        // Aylık: Gün göster
-        return DateFormat('dd', 'tr_TR').format(date);
-      case PeriodType.year:
-        // Yıllık: Ay göster
+        // Aylık: Ay göster (Oca, Şub, Mar, vb.)
         return DateFormat('MMM', 'tr_TR').format(date);
+      case PeriodType.year:
+        // Yıllık: Yıl göster
+        return date.year.toString();
     }
   }
-}
-
-// Bar'lar arasındaki dikey çizgileri çizen CustomPainter
-class _VerticalLinePainter extends CustomPainter {
-  final int dataLength;
-  final Color lineColor;
-  final double barWidth;
-  final double groupsSpace;
-
-  _VerticalLinePainter({
-    required this.dataLength,
-    required this.lineColor,
-    required this.barWidth,
-    required this.groupsSpace,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = lineColor
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-
-    for (int i = 0; i < dataLength - 1; i++) {
-      final barStartX = i * (barWidth + groupsSpace);
-      final barEndX = barStartX + barWidth;
-      
-      canvas.drawLine(
-        Offset(barEndX, 0),
-        Offset(barEndX, size.height),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

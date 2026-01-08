@@ -6,9 +6,6 @@ import '../../shared_widgets/period_selector.dart';
 import '../../shared_widgets/custom_dropdown.dart';
 import '../../shared_widgets/app_bar.dart';
 import '../../shared_widgets/main_bottom_navbar.dart';
-import '../../shared_widgets/year_navigator.dart';
-import '../../shared_widgets/month_navigator.dart';
-import '../../shared_widgets/day_navigator.dart';
 import '../widgets/consumption_tab_content.dart';
 import '../widgets/production_tab_content.dart';
 import '../widgets/carbon_footprint_tab_content.dart';
@@ -134,77 +131,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   }
 
   void _handlePeriodChange(PeriodType period, BuildContext blocContext) async {
-    // Eğer "Gün" seçiliyorsa ve zaten seçili değilse, önce period'u değiştir
-    // Eğer zaten "Gün" seçiliyse, tarih seçici aç
-    if (period == PeriodType.day) {
-      if (_selectedPeriod == PeriodType.day) {
-        // Zaten "Gün" seçili, tarih seçici aç
-        final selectedDate = await showDatePicker(
-          context: blocContext,
-          initialDate: _currentDay,
-          firstDate: DateTime(2020),
-          lastDate: DateTime.now(),
-          locale: const Locale('tr', 'TR'),
-          helpText: 'Hangi günü seçmek istersiniz?',
-          cancelText: 'İptal',
-          confirmText: 'Seç',
-        );
-        
-        if (selectedDate != null) {
-          setState(() {
-            _currentDay = selectedDate;
-          });
-          
-          // Tüketim sekmesindeyse veri çek
-          if (_selectedTab == AnalyticsTab.consumption) {
-            blocContext.read<AnalyticsCubit>().loadConsumptionData(
-              buildingName: _selectedBuilding,
-              period: period,
-              year: _currentYear,
-              day: _currentDay,
-            );
-          }
-        }
-        return; // Period değiştirme işlemini yapma
-      } else {
-        // "Gün" seçili değil, önce period'u değiştir, sonra tarih seçici aç
-        setState(() {
-          _selectedPeriod = period;
-          _currentDay = DateTime.now();
-        });
-        
-        // Tarih seçici aç
-        final selectedDate = await showDatePicker(
-          context: blocContext,
-          initialDate: _currentDay,
-          firstDate: DateTime(2020),
-          lastDate: DateTime.now(),
-          locale: const Locale('tr', 'TR'),
-          helpText: 'Hangi günü seçmek istersiniz?',
-          cancelText: 'İptal',
-          confirmText: 'Seç',
-        );
-        
-        if (selectedDate != null) {
-          setState(() {
-            _currentDay = selectedDate;
-          });
-        }
-        
-        // Tüketim sekmesindeyse veri çek
-        if (_selectedTab == AnalyticsTab.consumption) {
-          blocContext.read<AnalyticsCubit>().loadConsumptionData(
-            buildingName: _selectedBuilding,
-            period: period,
-            year: _currentYear,
-            day: _currentDay,
-          );
-        }
-        return;
-      }
-    }
-    
-    // Diğer period'lar için normal işlem
+    // Period'u değiştir
     setState(() {
       _selectedPeriod = period;
       // Period değiştiğinde ay'ı bugünün ayına sıfırla (eğer ay seçildiyse)
@@ -220,6 +147,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         period: period,
         year: _currentYear,
         month: period == PeriodType.month ? _currentMonth : null,
+        day: period == PeriodType.day ? _currentDay : null,
       );
     }
   }
@@ -243,68 +171,37 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     }
   }
 
-  void _handleYearChange({required bool isNext, required BuildContext blocContext}) {
-    setState(() {
-      _currentYear += isNext ? 1 : -1;
-    });
-    
-    // Tüketim sekmesindeyse veri çek
-    if (_selectedTab == AnalyticsTab.consumption) {
-      blocContext.read<AnalyticsCubit>().loadConsumptionData(
-        buildingName: _selectedBuilding,
-        period: _selectedPeriod,
-        year: _currentYear,
-        month: _currentMonth,
-      );
+  void _handleYearDropdownChange(String? yearStr, BuildContext blocContext) {
+    if (yearStr != null) {
+      final year = int.tryParse(yearStr);
+      if (year != null) {
+        setState(() {
+          _currentYear = year;
+        });
+        
+        // Tüketim sekmesindeyse veri çek
+        if (_selectedTab == AnalyticsTab.consumption) {
+          blocContext.read<AnalyticsCubit>().loadConsumptionData(
+            buildingName: _selectedBuilding,
+            period: _selectedPeriod,
+            year: _currentYear,
+            month: _currentMonth,
+          );
+        }
+      }
     }
   }
 
-  void _handleMonthChange({required bool isNext, required BuildContext blocContext}) {
-    setState(() {
-      if (isNext) {
-        _currentMonth++;
-        if (_currentMonth > 12) {
-          _currentMonth = 1;
-          _currentYear++;
-        }
-      } else {
-        _currentMonth--;
-        if (_currentMonth < 1) {
-          _currentMonth = 12;
-          _currentYear--;
-        }
-      }
-    });
+  Widget _buildYearDropdown(BuildContext context) {
+    // 2020'den 2025'e kadar yılları oluştur
+    final years = List.generate(6, (index) => (2020 + index).toString());
     
-    // Tüketim sekmesindeyse veri çek
-    if (_selectedTab == AnalyticsTab.consumption) {
-      blocContext.read<AnalyticsCubit>().loadConsumptionData(
-        buildingName: _selectedBuilding,
-        period: _selectedPeriod,
-        year: _currentYear,
-        month: _currentMonth,
-      );
-    }
-  }
-
-  void _handleDayChange({required bool isNext, required BuildContext blocContext}) {
-    setState(() {
-      if (isNext) {
-        _currentDay = _currentDay.add(const Duration(days: 1));
-      } else {
-        _currentDay = _currentDay.subtract(const Duration(days: 1));
-      }
-    });
-    
-    // Tüketim sekmesindeyse veri çek
-    if (_selectedTab == AnalyticsTab.consumption) {
-      blocContext.read<AnalyticsCubit>().loadConsumptionData(
-        buildingName: _selectedBuilding,
-        period: _selectedPeriod,
-        year: _currentYear,
-        day: _currentDay,
-      );
-    }
+    return CustomDropdown(
+      label: '',
+      selectedItem: _currentYear.toString(),
+      items: years,
+      onChanged: (year) => _handleYearDropdownChange(year, context),
+    );
   }
 
   // Sekme içeriği oluşturma metodu...
@@ -454,26 +351,11 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           onPeriodSelected: (period) => _handlePeriodChange(period, context),
                         ),
 
-                        // Period'a göre Yıl, Ay veya Gün Navigatörü göster
-                        Flexible(
-                          child: _selectedPeriod == PeriodType.day
-                              ? DayNavigator(
-                                  currentDay: _currentDay,
-                                  onPreviousDay: () => _handleDayChange(isNext: false, blocContext: context),
-                                  onNextDay: () => _handleDayChange(isNext: true, blocContext: context),
-                                )
-                              : _selectedPeriod == PeriodType.month
-                                  ? MonthNavigator(
-                                      currentMonth: _currentMonth,
-                                      onPreviousMonth: () => _handleMonthChange(isNext: false, blocContext: context),
-                                      onNextMonth: () => _handleMonthChange(isNext: true, blocContext: context),
-                                    )
-                                  : YearNavigator(
-                                      currentYear: _currentYear,
-                                      onPreviousYear: () => _handleYearChange(isNext: false, blocContext: context),
-                                      onNextYear: () => _handleYearChange(isNext: true, blocContext: context),
-                                    ),
-                        ),
+                        // Period'a göre Yıl Navigatörü göster (day period'da gösterilmez)
+                        if (_selectedPeriod != PeriodType.day)
+                          Flexible(
+                            child: _buildYearDropdown(context),
+                          ),
                       ],
                     ),
                     const SizedBox(height: 15),

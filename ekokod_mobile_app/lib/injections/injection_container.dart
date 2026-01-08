@@ -48,6 +48,7 @@ import '../domain/repositories/i_production_consumption_repository.dart';
 import '../application/home/get_daily_production_consumption_usecase.dart';
 import '../application/home/home_cubit.dart';
 import '../application/analytics/analytics_cubit.dart';
+import '../application/bills/bills_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -215,6 +216,15 @@ Future<void> init() async {
       buildingRepository: sl(),
       analyzerRepository: sl(),
       consumptionRepository: sl(),
+    ),
+  );
+
+  // ========= BILLS =========
+
+  // Cubit
+  sl.registerFactory<BillsCubit>(
+    () => BillsCubit(
+      buildingRepository: sl(),
     ),
   );
 }

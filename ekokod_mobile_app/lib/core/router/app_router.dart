@@ -4,11 +4,14 @@ import 'package:ekokod_mobile_app/presentation/home/pages/home_page.dart';
 import 'package:ekokod_mobile_app/presentation/menu/pages/menu_pages.dart';
 import 'package:ekokod_mobile_app/presentation/menu/pages/profile_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../constants/routes.dart';
 import '../../presentation/auth/pages/login_page.dart';
 import '../../presentation/start/start_page.dart';
 import '../../presentation/analytics/pages/analytics_page.dart';
+import '../../injections/injection_container.dart' as di;
+import '../../application/bills/bills_cubit.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -37,7 +40,10 @@ class AppRouter {
       GoRoute(
         path: RoutePaths.bills,
         name: RouteNames.bills,
-        builder: (context, state) => const BillsPage(),
+        builder: (context, state) => BlocProvider<BillsCubit>(
+          create: (_) => di.sl<BillsCubit>(),
+          child: const BillsPage(),
+        ),
       ),
       GoRoute(
         path: RoutePaths.alarms,

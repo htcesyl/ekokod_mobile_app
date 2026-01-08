@@ -171,12 +171,25 @@ class BuildingModel {
   Map<String, BillHistoryItemModel>? get billHistory {
     if (billHistoryJson == null) return null;
     
-    return billHistoryJson!.map(
-      (key, value) => MapEntry(
-        key,
-        BillHistoryItemModel.fromJson(value as Map<String, dynamic>),
-      ),
-    );
+    try {
+      return billHistoryJson!.map(
+        (key, value) {
+          try {
+            return MapEntry(
+              key,
+              BillHistoryItemModel.fromJson(value as Map<String, dynamic>),
+            );
+          } catch (e) {
+            print('❌ BillHistoryItemModel.fromJson() hatası (key: $key): $e');
+            print('❌ Value: $value');
+            rethrow;
+          }
+        },
+      );
+    } catch (e) {
+      print('❌ billHistory parse hatası (getter): $e');
+      return null; // Hata durumunda null döndür
+    }
   }
 
   // Entity conversion method
@@ -184,9 +197,22 @@ class BuildingModel {
     // billHistory map'ini entity'ye çevir
     Map<String, BillHistoryItemEntity>? billHistoryEntity;
     if (billHistory != null) {
-      billHistoryEntity = billHistory!.map(
-        (key, value) => MapEntry(key, value.toEntity()),
-      );
+      try {
+        billHistoryEntity = billHistory!.map(
+          (key, value) {
+            try {
+              return MapEntry(key, value.toEntity());
+            } catch (e) {
+              print('❌ BillHistoryItemModel.toEntity() hatası (key: $key): $e');
+              rethrow;
+            }
+          },
+        );
+      } catch (e) {
+        print('❌ billHistory parse hatası: $e');
+        print('❌ billHistoryJson: $billHistoryJson');
+        billHistoryEntity = null; // Hata durumunda null yap
+      }
     }
 
     return BuildingEntity(
@@ -231,9 +257,21 @@ extension BuildingModelExtension on BuildingModel {
     // billHistory map'ini entity'ye çevir
     Map<String, BillHistoryItemEntity>? billHistoryEntity;
     if (billHistory != null) {
-      billHistoryEntity = billHistory!.map(
-        (key, value) => MapEntry(key, value.toEntity()),
-      );
+      try {
+        billHistoryEntity = billHistory!.map(
+          (key, value) {
+            try {
+              return MapEntry(key, value.toEntity());
+            } catch (e) {
+              print('❌ Extension: BillHistoryItemModel.toEntity() hatası (key: $key): $e');
+              rethrow;
+            }
+          },
+        );
+      } catch (e) {
+        print('❌ Extension: billHistory parse hatası: $e');
+        billHistoryEntity = null; // Hata durumunda null yap
+      }
     }
 
     return BuildingEntity(

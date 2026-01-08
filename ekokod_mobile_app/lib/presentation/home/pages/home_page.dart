@@ -115,7 +115,7 @@ class _HomePageState extends State<HomePage> {
             children: [
               Expanded(
                 child: DataSummaryCard(
-                  title: 'Günlük Tüketim',
+                  title: 'Günlük Tüketim (00:00 dan sonra)',
                   value: '${consumption.toStringAsFixed(2)} kWh/Gün',
                   isCurrency: false,
                 ),

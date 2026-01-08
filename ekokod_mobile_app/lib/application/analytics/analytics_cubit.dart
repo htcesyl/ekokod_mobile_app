@@ -196,14 +196,9 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
 
       switch (period) {
         case PeriodType.day:
-          // Gün: Seçilen günün tarihi
-          // Eğer seçilen gün için veri yoksa, son 30 günün verisini çek
-          // Böylece en azından bir veri bulma şansımız artar
-          final selectedDay = day ?? DateTime(now.year, now.month, now.day);
-          final targetDate = DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
-          // Son 30 günün verisini çek (seçilen gün dahil)
-          startDate = targetDate.subtract(const Duration(days: 29));
-          endDate = targetDate;
+          // Gün: Seçilen yılın tüm günleri (365 gün) - günlük toplam veriler
+          startDate = DateTime(year, 1, 1);
+          endDate = DateTime(year, 12, 31);
           periodStr = 'daily';
           break;
         case PeriodType.week:
@@ -215,17 +210,16 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
           periodStr = 'daily';
           break;
         case PeriodType.month:
-          // Ay: Seçili yıl ve ayda seçilen ayın tamamı
-          final selectedMonth = month ?? now.month;
-          startDate = DateTime(year, selectedMonth, 1);
-          endDate = DateTime(year, selectedMonth + 1, 0); // Ayın son günü
-          periodStr = 'daily';
-          break;
-        case PeriodType.year:
-          // Yıl: Seçili yılın tamamı (aylık veriler)
+          // Ay: Seçili yılın tüm ayları (Ocak-Aralık) - aylık toplam veriler
           startDate = DateTime(year, 1, 1);
           endDate = DateTime(year, 12, 31);
-          periodStr = 'monthly';
+          periodStr = 'monthly'; // Aylık veriler çekip aylık toplama dönüştüreceğiz
+          break;
+        case PeriodType.year:
+          // Yıl: 2020-2025 arası tüm yılların yıllık toplam verileri
+          startDate = DateTime(2020, 1, 1);
+          endDate = DateTime(2025, 12, 31);
+          periodStr = 'monthly'; // Aylık veriler çekip yıllık toplama dönüştüreceğiz
           break;
       }
 
@@ -266,12 +260,12 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
               String key;
               switch (period) {
                 case PeriodType.year:
-                  // Yıllık: Aylık veriler için ay/yıl anahtarı
-                  key = '${point.timestamp.month}/${point.timestamp.year}';
+                  // Yıllık: Yıllık toplam veriler için sadece yıl anahtarı
+                  key = '${point.timestamp.year}';
                   break;
                 case PeriodType.month:
-                  // Aylık: Günlük veriler için tarih anahtarı
-                  key = '${point.timestamp.year}-${point.timestamp.month.toString().padLeft(2, '0')}-${point.timestamp.day.toString().padLeft(2, '0')}';
+                  // Aylık: Aylık toplam veriler için ay/yıl anahtarı
+                  key = '${point.timestamp.month}/${point.timestamp.year}';
                   break;
                 case PeriodType.week:
                   // Haftalık: Günlük veriler için tarih anahtarı
@@ -298,37 +292,95 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
           return ChartPointEntity(timestamp: timestamp, value: entry.value);
         }).toList();
 
-        // Tarihe göre sırala
-        chartPoints.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-        
-        // Günlük veri için: Seçilen günün verisini bul, yoksa en son veri olan günü göster
-        if (period == PeriodType.day && chartPoints.isNotEmpty) {
-          final selectedDay = day ?? DateTime(now.year, now.month, now.day);
-          final targetDate = DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
-          
-          // Seçilen günün verisini bul
-          final selectedDayData = chartPoints.where((point) {
-            final pointDate = DateTime(point.timestamp.year, point.timestamp.month, point.timestamp.day);
-            return pointDate == targetDate;
+        // Period'a göre sırala
+        if (period == PeriodType.year) {
+          // Yıllık: Yıla göre sırala
+          chartPoints.sort((a, b) => a.timestamp.year.compareTo(b.timestamp.year));
+          // Her yıl için timestamp'i o yılın 1 Ocak'ına ayarla (görselleştirme için)
+          chartPoints = chartPoints.map((point) {
+            return ChartPointEntity(
+              timestamp: DateTime(point.timestamp.year, 1, 1),
+              value: point.value,
+            );
+          }).toList();
+        } else if (period == PeriodType.month) {
+          // Aylık: Aya göre sırala (Ocak'tan Aralık'a)
+          chartPoints.sort((a, b) {
+            if (a.timestamp.year != b.timestamp.year) {
+              return a.timestamp.year.compareTo(b.timestamp.year);
+            }
+            return a.timestamp.month.compareTo(b.timestamp.month);
+          });
+          // Her ay için timestamp'i o ayın 1'ine ayarla (görselleştirme için)
+          chartPoints = chartPoints.map((point) {
+            return ChartPointEntity(
+              timestamp: DateTime(point.timestamp.year, point.timestamp.month, 1),
+              value: point.value,
+            );
+          }).toList();
+        } else if (period == PeriodType.day) {
+          // Günlük: Tarihe göre sırala (yılın tüm günleri)
+          chartPoints.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+          // Her gün için timestamp'i o günün başlangıcına ayarla (görselleştirme için)
+          chartPoints = chartPoints.map((point) {
+            return ChartPointEntity(
+              timestamp: DateTime(point.timestamp.year, point.timestamp.month, point.timestamp.day),
+              value: point.value,
+            );
           }).toList();
           
-          if (selectedDayData.isNotEmpty) {
-            // Seçilen gün için veri varsa, sadece o günün verisini göster
-            chartPoints = selectedDayData;
-            print('✅ Seçilen gün (${targetDate.toString().split(' ')[0]}) için veri bulundu');
-          } else {
-            // Seçilen gün için veri yoksa, en son veri olan günü göster
-            chartPoints = [chartPoints.last];
-            final lastDataDate = DateTime(
-              chartPoints.first.timestamp.year,
-              chartPoints.first.timestamp.month,
-              chartPoints.first.timestamp.day,
-            );
-            print('⚠️ Seçilen gün (${targetDate.toString().split(' ')[0]}) için veri yok, en son veri olan gün gösteriliyor: ${lastDataDate.toString().split(' ')[0]}');
+          // 365 günün tamamını doldur (veri olmayan günler için placeholder)
+          final Map<String, ChartPointEntity> dayMap = {};
+          for (final point in chartPoints) {
+            final key = '${point.timestamp.year}-${point.timestamp.month.toString().padLeft(2, '0')}-${point.timestamp.day.toString().padLeft(2, '0')}';
+            dayMap[key] = point;
           }
+          
+          // Yılın tüm günlerini oluştur
+          final List<ChartPointEntity> allDays = [];
+          final startOfYear = DateTime(year, 1, 1);
+          final endOfYear = DateTime(year, 12, 31);
+          
+          for (var date = startOfYear; date.isBefore(endOfYear) || date.isAtSameMomentAs(endOfYear); date = date.add(const Duration(days: 1))) {
+            final key = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+            if (dayMap.containsKey(key)) {
+              // Veri olan gün
+              allDays.add(dayMap[key]!);
+            } else {
+              // Veri olmayan gün - küçük ince çizgi için placeholder (value: -1 flag)
+              allDays.add(ChartPointEntity(
+                timestamp: DateTime(date.year, date.month, date.day),
+                value: -1, // Veri olmadığını belirtmek için -1 kullanıyoruz
+              ));
+            }
+          }
+          
+          chartPoints = allDays;
+          print('✅ 365 günün tamamı oluşturuldu: ${chartPoints.length} gün (Veri olan: ${chartPoints.where((p) => p.value >= 0).length}, Veri olmayan: ${chartPoints.where((p) => p.value < 0).length})');
+        } else {
+          // Diğer period'lar için tarihe göre sırala
+          chartPoints.sort((a, b) => a.timestamp.compareTo(b.timestamp));
         }
       } else {
         print('⚠️ API\'den veri gelmedi veya boş döndü');
+        
+        // Period "day" seçildiğinde, veri gelmese bile 365 günün tamamını oluştur
+        if (period == PeriodType.day) {
+          final List<ChartPointEntity> allDays = [];
+          final startOfYear = DateTime(year, 1, 1);
+          final endOfYear = DateTime(year, 12, 31);
+          
+          for (var date = startOfYear; date.isBefore(endOfYear) || date.isAtSameMomentAs(endOfYear); date = date.add(const Duration(days: 1))) {
+            // Tüm günler için veri yok placeholder'ı oluştur
+            allDays.add(ChartPointEntity(
+              timestamp: DateTime(date.year, date.month, date.day),
+              value: -1, // Veri olmadığını belirtmek için -1 kullanıyoruz
+            ));
+          }
+          
+          chartPoints = allDays;
+          print('✅ Veri olmasa bile 365 gün oluşturuldu (Period: day)');
+        }
       }
 
       print('✅ ${chartPoints.length} adet veri noktası oluşturuldu (Period: $period)');
