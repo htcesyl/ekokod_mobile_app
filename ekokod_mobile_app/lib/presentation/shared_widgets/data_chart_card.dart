@@ -39,12 +39,7 @@ class DataChartCard extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Veriler Daha Sonra Eklenecek'),
-
-            // SADECE GRAFİK ALANI KALDI
-            chartWidget,
-          ],
+          children: [chartWidget],
         ),
       ),
     );
