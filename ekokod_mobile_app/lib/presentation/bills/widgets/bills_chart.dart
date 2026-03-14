@@ -81,18 +81,26 @@ class BillsChart extends StatelessWidget {
                 getTitlesWidget: (value, meta) {
                   if (value.toInt() >= 0 && value.toInt() < data!.length) {
                     final date = data![value.toInt()].timestamp;
-                    final monthName = DateFormat('MMM', 'tr_TR').format(date);
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        monthName,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                    // Tüketim grafiği gibi: Sadece bazı ayları göster (her 2 ayda bir)
+                    // Oca, Mar, May, Tem, Eyl, Kas gibi
+                    final month = date.month;
+                    // Sadece tek sayılı ayları göster (1, 3, 5, 7, 9, 11) veya her ayı göster
+                    // Kullanıcı görselinde her 2 ayda bir görünüyor, ama 12 ay için hepsini gösterelim
+                    // Alternatif: Sadece tek sayılı ayları göster
+                    if (month % 2 == 1 || month == 12) { // Tek sayılı aylar + Aralık
+                      final monthName = DateFormat('MMM', 'tr_TR').format(date);
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          monthName,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    }
                   }
                   return const Text('');
                 },
@@ -102,14 +110,16 @@ class BillsChart extends StatelessWidget {
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 50,
+                reservedSize: 48, // Tüketim grafiği gibi
                 interval: maxY / 4,
                 getTitlesWidget: (value, meta) {
-                  if (value >= 0 && value <= maxY) {
+                  // Tüketim grafiği gibi: Yuvarlanmış değerler göster
+                  final roundedValue = (value / 1000).round() * 1000; // 1000'in katları
+                  if (roundedValue >= 0 && roundedValue <= maxY) {
                     return Padding(
                       padding: const EdgeInsets.only(right: 6),
                       child: Text(
-                        '₺ ${(value / 1000).toStringAsFixed(0)}K',
+                        '₺ ${(roundedValue / 1000).toStringAsFixed(0)}K',
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 11,
@@ -132,16 +142,8 @@ class BillsChart extends StatelessWidget {
             ),
           ),
           gridData: FlGridData(
-            show: true,
+            show: false, // Tüketim grafiği gibi grid gösterilmiyor
             drawVerticalLine: false,
-            drawHorizontalLine: true,
-            horizontalInterval: maxY / 4,
-            getDrawingHorizontalLine: (value) {
-              return FlLine(
-                color: Colors.grey[200]!,
-                strokeWidth: 1,
-              );
-            },
           ),
           barGroups: data!.asMap().entries.map((entry) {
             final index = entry.key;

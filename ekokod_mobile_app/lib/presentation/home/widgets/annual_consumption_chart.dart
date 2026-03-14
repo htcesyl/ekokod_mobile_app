@@ -32,44 +32,38 @@ class AnnualConsumptionChart extends StatelessWidget {
 
     // En yüksek değeri bul (grafik yüksekliği için)
     final maxValue = data!.map((e) => e.value).reduce((a, b) => a > b ? a : b);
-    final maxY = (maxValue * 1.15).ceilToDouble(); // %15 padding (daha kompakt)
-
-    // Veri noktalarını FlSpot listesine dönüştür
-    final spots = data!.asMap().entries.map((entry) {
-      return FlSpot(entry.key.toDouble(), entry.value.value);
-    }).toList();
+    final maxY = (maxValue * 1.15).ceilToDouble(); // %15 padding
 
     return Container(
       height: 280,
       padding: const EdgeInsets.only(left: 4, right: 16, top: 16, bottom: 8),
-      child: LineChart(
-        LineChartData(
+      child: BarChart(
+        BarChartData(
+          alignment: BarChartAlignment.start,
+          groupsSpace: 35, // Aylar arası boşluk (veri analizi sayfasındaki gibi)
           maxY: maxY,
           minY: 0,
-          lineTouchData: LineTouchData(
+          barTouchData: BarTouchData(
             enabled: true,
-            touchTooltipData: LineTouchTooltipData(
-              getTooltipColor: (touchedSpot) => AppColors.webColor,
+            touchTooltipData: BarTouchTooltipData(
+              getTooltipColor: (group) => AppColors.webColor,
               tooltipRoundedRadius: 8,
               tooltipPadding: const EdgeInsets.all(8),
               tooltipMargin: 8,
-              getTooltipItems: (List<LineBarSpot> touchedSpots) {
-                return touchedSpots.map((LineBarSpot touchedSpot) {
-                  final index = touchedSpot.x.toInt();
-                  if (index >= 0 && index < data!.length) {
-                    final monthName = DateFormat('MMM', 'tr_TR').format(data![index].timestamp);
-                    final value = touchedSpot.y.toStringAsFixed(2);
-                    return LineTooltipItem(
-                      '$monthName\n$value kWh',
-                      const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    );
-                  }
-                  return null;
-                }).toList();
+              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                if (groupIndex >= 0 && groupIndex < data!.length) {
+                  final monthName = DateFormat('MMM', 'tr_TR').format(data![groupIndex].timestamp);
+                  final value = rod.toY.toStringAsFixed(2);
+                  return BarTooltipItem(
+                    '$monthName\n$value kWh',
+                    const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  );
+                }
+                return null;
               },
             ),
           ),
@@ -87,18 +81,22 @@ class AnnualConsumptionChart extends StatelessWidget {
                 getTitlesWidget: (value, meta) {
                   if (value.toInt() >= 0 && value.toInt() < data!.length) {
                     final date = data![value.toInt()].timestamp;
-                    final monthName = DateFormat('MMM', 'tr_TR').format(date);
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        monthName,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                    // Veri analizi sayfası gibi: Sadece bazı ayları göster (tek sayılı aylar + Aralık)
+                    final month = date.month;
+                    if (month % 2 == 1 || month == 12) {
+                      final monthName = DateFormat('MMM', 'tr_TR').format(date);
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          monthName,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    }
                   }
                   return const Text('');
                 },
@@ -139,50 +137,27 @@ class AnnualConsumptionChart extends StatelessWidget {
             ),
           ),
           gridData: FlGridData(
-            show: true,
+            show: false, // Veri analizi sayfası gibi grid gösterilmiyor
             drawVerticalLine: false,
-            drawHorizontalLine: true,
-            horizontalInterval: maxY / 4,
-            getDrawingHorizontalLine: (value) {
-              return FlLine(
-                color: Colors.grey[200]!,
-                strokeWidth: 1,
-              );
-            },
           ),
-          lineBarsData: [
-            LineChartBarData(
-              spots: spots,
-              isCurved: true,
-              curveSmoothness: 0.35,
-              color: AppColors.webColor,
-              barWidth: 3,
-              isStrokeCapRound: true,
-              dotData: FlDotData(
-                show: true,
-                getDotPainter: (spot, percent, barData, index) {
-                  return FlDotCirclePainter(
-                    radius: 4,
-                    color: AppColors.webColor,
-                    strokeWidth: 2,
-                    strokeColor: Colors.white,
-                  );
-                },
-              ),
-              belowBarData: BarAreaData(
-                show: true,
-                color: AppColors.webColor.withOpacity(0.1),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppColors.webColor.withOpacity(0.3),
-                    AppColors.webColor.withOpacity(0.05),
-                  ],
+          barGroups: data!.asMap().entries.map((entry) {
+            final index = entry.key;
+            final point = entry.value;
+            return BarChartGroupData(
+              x: index,
+              barRods: [
+                BarChartRodData(
+                  fromY: 0,
+                  toY: point.value,
+                  color: AppColors.webColor,
+                  width: 18, // Bar genişliği (veri analizi sayfasındaki gibi)
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(8),
+                  ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          }).toList(),
         ),
       ),
     );
